@@ -7,6 +7,12 @@ persistently.
 
 ![Calibration curve](figures/calibration.png)
 
+The same curve with **equal-count bins** — 27 quantile buckets of ~500 bets each, grouped by nearest
+market price so every point carries the same statistical power — bends identically at the tails:
+[figures/calibration_equal_count.png](figures/calibration_equal_count.png). (A curiosity that
+surfaced while building it: at exact pick'em prices the red corner wins 62.5% of 120 fights —
+corner assignment carries information the price ignores.)
+
 ## Headline results
 
 The market is almost perfectly calibrated through the middle of the probability range, but bent at

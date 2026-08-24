@@ -37,20 +37,41 @@ def wilson_ci(k, n, alpha: float = 0.05):
 def _dedupe_within_bucket(sides: pd.DataFrame, bucket: pd.Series) -> pd.DataFrame:
     """If both sides of the same fight fall in the same bucket (possible only
     around 0.5), keep one of them; otherwise the mirrored pair (y, 1-y) would
-    artificially pin the bucket mean at 0.5 and understate its variance."""
+    artificially pin the bucket mean at 0.5 and understate its variance.
+
+    Which side is kept alternates deterministically with the fight id. Always
+    keeping the same corner would be biased: red corners win ~58% of
+    pick'em-priced fights (a matchmaking/corner-assignment effect), so a
+    keep-red rule would paint a spurious kink at 0.5. Alternating restores the
+    'random side of an evenly priced fight' interpretation (~50%)."""
     tmp = sides.assign(_bucket=bucket.to_numpy())
-    return tmp.drop_duplicates(subset=["fight_id", "_bucket"], keep="first")
+    grp = tmp.groupby(["fight_id", "_bucket"], observed=True)
+    rank = grp.cumcount()
+    size = grp["fight_id"].transform("size")
+    keep = (size == 1) | (rank == (tmp["fight_id"].to_numpy() % 2))
+    return tmp[keep.to_numpy()]
 
 
 def calibration_table(
     sides: pd.DataFrame,
     prob_col: str = "p_basic",
     bins: np.ndarray = DEFAULT_BINS,
+    equal_count: int | None = None,
     alpha: float = 0.05,
 ) -> pd.DataFrame:
     """Group sides into implied-probability buckets and compare the market's
-    mean implied probability with the realized win frequency (Wilson CI)."""
-    bucket = pd.cut(sides[prob_col], bins=bins, right=False)
+    mean implied probability with the realized win frequency (Wilson CI).
+
+    Binning is fixed-width over `bins` by default. Pass ``equal_count=k`` to
+    use k quantile buckets instead -- every bucket holds (nearly) the same
+    number of bets, grouped by nearest market probability, which equalizes
+    statistical power across the curve and adds resolution where prices
+    cluster.
+    """
+    if equal_count is not None:
+        bucket = pd.qcut(sides[prob_col], q=equal_count, duplicates="drop")
+    else:
+        bucket = pd.cut(sides[prob_col], bins=bins, right=False)
     deduped = _dedupe_within_bucket(sides, bucket)
 
     g = deduped.groupby("_bucket", observed=True)
@@ -115,11 +136,12 @@ def bucket_binomial_tests(
     sides: pd.DataFrame,
     prob_col: str = "p_basic",
     bins: np.ndarray = DEFAULT_BINS,
+    equal_count: int | None = None,
 ) -> pd.DataFrame:
     """Exact two-sided binomial test per bucket of H0: win rate equals the
     bucket's mean de-vigged implied probability, with Benjamini-Hochberg
     control of the false discovery rate across buckets."""
-    tab = calibration_table(sides, prob_col=prob_col, bins=bins)
+    tab = calibration_table(sides, prob_col=prob_col, bins=bins, equal_count=equal_count)
     pvals = [
         stats.binomtest(int(w), int(n), p0).pvalue
         for w, n, p0 in zip(tab["wins"], tab["n"], tab["implied"])

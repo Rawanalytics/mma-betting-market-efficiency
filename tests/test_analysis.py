@@ -92,6 +92,19 @@ def _n_deduped(sides):
     return len(sides) - sides.assign(b=bucket).drop_duplicates(["fight_id", "b"]).shape[0]
 
 
+def test_calibration_table_equal_count_bins():
+    sides = make_synthetic_sides(n_fights=3000, slope=1.0, seed=6)
+    tab = calibration_table(sides, "p_basic", equal_count=12)
+    assert len(tab) == 12
+    # quantile bins hold near-equal counts (the within-fight dedupe can only
+    # thin the bucket(s) straddling 0.5)
+    assert tab["n"].min() >= 0.7 * tab["n"].max()
+    # implied probability is monotone across quantile bins
+    assert np.all(np.diff(tab["implied"]) > 0)
+    lo, hi = tab["actual_lo"], tab["actual_hi"]
+    assert np.all(lo <= tab["actual"]) and np.all(tab["actual"] <= hi)
+
+
 def test_returns_by_band_efficient_market_matches_vig_null():
     sides = make_synthetic_sides(n_fights=8000, slope=1.0, seed=4)
     tab = returns_by_band(sides, n_boot=500, seed=4)

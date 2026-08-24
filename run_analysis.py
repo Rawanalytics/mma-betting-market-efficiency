@@ -64,6 +64,11 @@ def main() -> None:
     print("[2/6] Calibration tests ...")
     cal_tab = calibration.bucket_binomial_tests(sides, "p_basic")
     cal_tab.to_csv(results_dir / "calibration_buckets.csv", index=False)
+    # Robustness view: quantile bins with ~500 bets each, grouped by nearest
+    # market price, so every point on the curve has equal statistical power.
+    n_eq = max(10, len(sides) // 500)
+    cal_eq = calibration.bucket_binomial_tests(sides, "p_basic", equal_count=n_eq)
+    cal_eq.to_csv(results_dir / "calibration_buckets_equal_count.csv", index=False)
 
     logit_tests = {
         pc: calibration.logistic_calibration_test(sides, pc)
@@ -123,6 +128,13 @@ def main() -> None:
     # -------------------------------------------------------------- figures
     print("[6/6] Figures ...")
     plots.plot_calibration(cal_tab, figures_dir / "calibration.png")
+    plots.plot_calibration(
+        cal_eq, figures_dir / "calibration_equal_count.png",
+        title="Equal-count bins tell the same story",
+        caption=f"{len(cal_eq)} quantile bins of the de-vigged implied probability "
+                f"(~{int(cal_eq['n'].mean())} bets each), grouped by nearest market price "
+                "(results/calibration_buckets_equal_count.csv).",
+    )
     plots.plot_returns_by_band(band_tab, figures_dir / "returns_by_band.png")
     plots.plot_cumulative_pnl(pnl, figures_dir / "cumulative_pnl.png")
     plots.plot_slope_stability(summary["era_slopes"], figures_dir / "slope_stability.png")

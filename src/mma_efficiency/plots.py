@@ -67,7 +67,14 @@ def _fig_caption(fig, text: str, y: float = -0.01) -> None:
 
 
 # ---------------------------------------------------------------------------
-def plot_calibration(tab: pd.DataFrame, path: str, prob_label: str = "de-vigged") -> None:
+def plot_calibration(
+    tab: pd.DataFrame,
+    path: str,
+    prob_label: str = "de-vigged",
+    title: str = "The market is well calibrated in the middle — and bent at the tails",
+    caption: str = "Deciles of the de-vigged implied probability; buckets with fewer than "
+                   "50 bets omitted from the plot (all buckets in results/calibration_buckets.csv).",
+) -> None:
     """Calibration curve: market implied probability vs realized win rate."""
     _style()
     fig, ax = plt.subplots(figsize=(7.0, 6.2))
@@ -96,7 +103,7 @@ def plot_calibration(tab: pd.DataFrame, path: str, prob_label: str = "de-vigged"
     )
     ax.annotate(
         f"Favorites underpriced:\npriced {hi_row['implied']:.0%}, win {hi_row['actual']:.0%}",
-        xy=(hi_row["implied"], hi_row["actual"]), xytext=(0.97, 0.66),
+        xy=(hi_row["implied"], hi_row["actual"]), xytext=(0.98, 0.50),
         fontsize=9.5, color=INK_2, ha="right",
         arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.9, shrinkB=4),
     )
@@ -108,10 +115,9 @@ def plot_calibration(tab: pd.DataFrame, path: str, prob_label: str = "de-vigged"
     _despine(ax)
     ax.set_xlabel("Market implied win probability (vig removed)")
     ax.set_ylabel("Actual win rate")
-    ax.set_title("The market is well calibrated in the middle — and bent at the tails")
+    ax.set_title(title)
     ax.legend(loc="upper left", fontsize=9.5)
-    _fig_caption(fig, "Deciles of the de-vigged implied probability; buckets with fewer than "
-                      "50 bets omitted from the plot (all buckets in results/calibration_buckets.csv).")
+    _fig_caption(fig, caption)
     fig.savefig(path)
     plt.close(fig)
 
