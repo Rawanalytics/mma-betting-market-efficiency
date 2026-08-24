@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from mma_efficiency import calibration, data, models, plots, returns  # noqa: E402
+from mma_efficiency import calibration, data, exploit, models, plots, returns  # noqa: E402
 
 ERAS = [
     ("2010–2015", "2010-01-01", "2016-01-01"),
@@ -111,8 +111,20 @@ def main() -> None:
     }
     pnl = returns.cumulative_pnl(sides, pnl_rules)
 
+    # ------------------------------------------------------- exploitability
+    print("[5/7] Exploitability: walk-forward test of a pre-registered rule ...")
+    sweep_fav = exploit.threshold_sweep(sides)
+    sweep_dog = exploit.threshold_sweep(sides, cutoffs=exploit.UNDERDOG_CUTOFFS)
+    pd.concat([sweep_fav, sweep_dog]).to_csv(results_dir / "threshold_sweep.csv", index=False)
+    wf = exploit.walk_forward_rule(sides)
+    summary["walk_forward"] = wf
+    print(f"      rule '{wf['chosen_rule']}' picked on pre-{wf['train_end'][:4]} data; "
+          f"out-of-sample ROI {wf['test_roi']:+.2%} on {wf['test_n_bets']:,} bets "
+          f"(95% CI [{wf['test_roi_ci'][0]:+.2%}, {wf['test_roi_ci'][1]:+.2%}], "
+          f"p(ROI>0) one-sided = {wf['test_p_roi_gt0']:.3f})")
+
     # ------------------------------------------------------------------- ML
-    print("[5/6] ML benchmark (public stats vs the closing line) ...")
+    print("[6/7] ML benchmark (public stats vs the closing line) ...")
     model_table = models.build_model_table(raw, fights)
     ml_res, ml_extra = models.run_benchmark(model_table, split_date=args.split_date)
     ml_res.to_csv(results_dir / "ml_benchmark.csv", index=False)
@@ -126,7 +138,7 @@ def main() -> None:
     summary["ml_benchmark"] = ml_res.drop(columns=["p_model_better"]).to_dict("records")
 
     # -------------------------------------------------------------- figures
-    print("[6/6] Figures ...")
+    print("[7/7] Figures ...")
     plots.plot_calibration(cal_tab, figures_dir / "calibration.png")
     plots.plot_calibration(
         cal_eq, figures_dir / "calibration_equal_count.png",
@@ -138,6 +150,7 @@ def main() -> None:
     plots.plot_returns_by_band(band_tab, figures_dir / "returns_by_band.png")
     plots.plot_cumulative_pnl(pnl, figures_dir / "cumulative_pnl.png")
     plots.plot_slope_stability(summary["era_slopes"], figures_dir / "slope_stability.png")
+    plots.plot_threshold_sweep(sweep_fav, wf, figures_dir / "exploitability.png")
     plots.plot_ml_benchmark(ml_res, figures_dir / "ml_benchmark.png")
 
     with open(results_dir / "summary.json", "w") as fh:
@@ -155,6 +168,8 @@ def main() -> None:
           f"won {wavg(hu, 'win_rate'):.1%}; flat-bet return {wavg(hu, 'mean_return'):+.1%}")
     print(f"Heavy favorites (-500 or shorter): flat-bet return {wavg(hf, 'mean_return'):+.1%} "
           f"(vig-only benchmark {band_tab['vig_null_return'].mean():+.1%})")
+    print(f"Exploitable edge, out of sample: {wf['test_roi']:+.1%} "
+          f"(beats the vig, not significantly > 0: p = {wf['test_p_roi_gt0']:.2f})")
     print("Results in results/, figures in figures/.")
 
 

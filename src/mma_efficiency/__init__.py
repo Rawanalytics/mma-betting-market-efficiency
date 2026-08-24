@@ -2,4 +2,4 @@
 
 __version__ = "1.0.0"
 
-from . import calibration, data, models, odds, returns  # noqa: F401
+from . import calibration, data, exploit, models, odds, returns  # noqa: F401

@@ -187,15 +187,19 @@ def run_benchmark(
 
 
 def edge_backtest(
-    test: pd.DataFrame, p_model_fav: np.ndarray, thresholds=(0.0, 0.02, 0.05, 0.10)
+    test: pd.DataFrame, p_model_fav: np.ndarray, thresholds=(0.0, 0.02, 0.05, 0.10),
+    n_boot: int = 4000, seed: int = 5,
 ) -> pd.DataFrame:
     """Bet 1 unit on whichever side the model gives positive expected value
     against the *raw* (vig included) price, at various minimum-edge thresholds.
 
     Expected value per unit on side s: p_model_s * dec_s - 1. This is the
     economically meaningful test: to profit you must beat the price with the
-    vig, not the de-vigged probability.
+    vig, not the de-vigged probability. ROI comes with a bootstrap 95% CI and
+    a one-sided p-value against ROI <= 0 (bets are one per fight, so plain
+    resampling is valid here).
     """
+    rng = np.random.default_rng(seed)
     rows = []
     y = test["y"].to_numpy()
     for thr in thresholds:
@@ -212,13 +216,25 @@ def edge_backtest(
         )
         n_bets = int(take_fav.sum() + take_dog.sum())
         mask = take_fav | take_dog
+        picked = ret[mask]
+        if n_bets:
+            idx = rng.integers(0, n_bets, size=(n_boot, n_bets))
+            boot = picked[idx].mean(axis=1)
+            ci_lo, ci_hi = np.quantile(boot, [0.025, 0.975])
+            shifted = boot - boot.mean()
+            p_gt0 = float((shifted >= picked.mean()).mean())
+        else:
+            ci_lo = ci_hi = p_gt0 = np.nan
         rows.append(
             {
                 "min_edge": thr,
                 "n_bets": n_bets,
                 "share_underdog_bets": float(take_dog.sum() / max(n_bets, 1)),
-                "roi": float(ret[mask].mean()) if n_bets else np.nan,
-                "total_profit": float(ret[mask].sum()),
+                "roi": float(picked.mean()) if n_bets else np.nan,
+                "roi_ci_lo": float(ci_lo),
+                "roi_ci_hi": float(ci_hi),
+                "p_roi_gt0": p_gt0,
+                "total_profit": float(picked.sum()),
             }
         )
     return pd.DataFrame(rows)

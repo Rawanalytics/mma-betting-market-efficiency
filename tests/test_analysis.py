@@ -8,6 +8,7 @@ from mma_efficiency.calibration import (
     logistic_calibration_test,
     wilson_ci,
 )
+from mma_efficiency.exploit import threshold_sweep, walk_forward_rule
 from mma_efficiency.returns import band_label, returns_by_band
 
 
@@ -22,6 +23,7 @@ def make_synthetic_sides(n_fights: int = 4000, slope: float = 1.0, seed: int = 0
     logit = np.log(p_market / (1 - p_market))
     p_true = 1 / (1 + np.exp(-slope * logit))
     won_a = rng.random(n_fights) < p_true
+    dates = pd.date_range("2010-01-01", periods=n_fights, freq="D")
 
     rows = []
     for i in range(n_fights):
@@ -30,6 +32,7 @@ def make_synthetic_sides(n_fights: int = 4000, slope: float = 1.0, seed: int = 0
             rows.append(
                 {
                     "fight_id": i,
+                    "date": dates[i],
                     "p_raw": p * 1.05,
                     "p_basic": p,
                     "p_shin": p,
@@ -113,6 +116,31 @@ def test_returns_by_band_efficient_market_matches_vig_null():
     # that cover the null for the vast majority of bands.
     covered = ((tab["vig_null_return"] >= tab["ci_lo"]) & (tab["vig_null_return"] <= tab["ci_hi"]))
     assert covered.mean() > 0.7
+
+
+def test_threshold_sweep_structure():
+    sides = make_synthetic_sides(n_fights=4000, slope=1.0, seed=7)
+    sweep = threshold_sweep(sides, cutoffs=[-200, -300, -400], n_boot=400, seed=7)
+    # heavier cutoffs select fewer bets, and CIs bracket the point estimate
+    assert np.all(np.diff(sweep["n_bets"]) < 0)
+    assert np.all(sweep["ci_lo"] <= sweep["roi"]) and np.all(sweep["roi"] <= sweep["ci_hi"])
+
+
+def test_walk_forward_finds_no_edge_in_efficient_market():
+    sides = make_synthetic_sides(n_fights=8000, slope=1.0, seed=8)
+    wf = walk_forward_rule(sides, train_end="2020-01-01",
+                           cutoffs=[-200, -300, -400], n_boot=400, seed=8)
+    # in a calibrated market no rule should show significant positive profit
+    assert wf["test_p_roi_gt0"] > 0.05
+    assert wf["test_n_bets"] > 100
+
+
+def test_favorites_profitable_under_strong_bias():
+    # slope 1.35 makes heavy favorites win far more than priced: the sweep
+    # should surface positive returns at heavy cutoffs
+    sides = make_synthetic_sides(n_fights=8000, slope=1.35, seed=9)
+    sweep = threshold_sweep(sides, cutoffs=[-300, -400, -500], n_boot=400, seed=9)
+    assert (sweep["roi"] > 0).all()
 
 
 def test_band_label_edges():

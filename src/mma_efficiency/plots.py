@@ -255,6 +255,63 @@ def plot_slope_stability(rows: list[dict], path: str) -> None:
     plt.close(fig)
 
 
+def plot_threshold_sweep(sweep: pd.DataFrame, wf: dict, path: str) -> None:
+    """Favorite-cutoff sweep: flat-bet ROI with cluster-bootstrap CIs, plus
+    the walk-forward out-of-sample verdict for the pre-registered rule."""
+    _style()
+    fig, ax = plt.subplots(figsize=(8.6, 5.0))
+
+    x = np.arange(len(sweep))
+    roi = sweep["roi"] * 100
+
+    lo_err = roi - sweep["ci_lo"] * 100
+    hi_err = sweep["ci_hi"] * 100 - roi
+    y_top = float((sweep["ci_hi"] * 100).max())
+    y_bot = float((sweep["ci_lo"] * 100).min())
+    ax.set_ylim(y_bot - 0.6, y_top + 2.1)  # headroom for the verdict text
+
+    ax.axhline(0, color=MUTED, lw=1.4, zorder=2)
+    vig = float(sweep["vig_null"].mean() * 100)
+    ax.axhline(vig, color=BASELINE, lw=1.2, zorder=2)
+    ax.text(-0.35, vig - 0.25, "efficient market (lose the vig)",
+            fontsize=8.5, color=MUTED, ha="left", va="top")
+
+    ax.errorbar(x, roi, yerr=[lo_err, hi_err],
+                fmt="o-", lw=2, color=S1, ms=8, markeredgecolor=SURFACE,
+                markeredgewidth=1.5, ecolor=INK_2, elinewidth=1.3,
+                capsize=3.5, capthick=1.3, zorder=3)
+
+    # Ring the rule the walk-forward test selected on training data only, and
+    # state its out-of-sample verdict in the free top-left corner.
+    hit = np.where(sweep["cutoff"].to_numpy() == wf["chosen_cutoff"])[0]
+    if len(hit):
+        i = int(hit[0])
+        ax.plot([i], [roi.iloc[i]], "o", ms=16, mfc="none", mec=INK_2,
+                mew=1.4, zorder=4)
+        ax.text(
+            -0.35, y_top + 1.95,
+            f"Walk-forward: rule '{wf['chosen_rule']}' (ringed) picked on "
+            f"pre-{str(wf['train_end'])[:4]} data only;\n"
+            f"out of sample it returned {wf['test_roi']*100:+.1f}% "
+            f"[{wf['test_roi_ci'][0]*100:+.1f}, {wf['test_roi_ci'][1]*100:+.1f}] "
+            f"per bet on {wf['test_n_bets']:,} bets — "
+            f"beats the vig, but p(ROI>0) = {wf['test_p_roi_gt0']:.2f}",
+            fontsize=9, color=INK_2, ha="left", va="top",
+        )
+
+    ax.set_xticks(x, [f"≤ {int(c)}" for c in sweep["cutoff"]])
+    ax.set_xlabel("Rule: flat-bet every favorite at least this heavy (American odds)")
+    ax.set_ylabel("Return per 1-unit bet (%), 95% cluster-bootstrap CI")
+    ax.set_title("Betting heavy favorites beats the vig — but not zero, reliably")
+    ax.grid(True, axis="y", zorder=0)
+    ax.grid(False, axis="x")
+    _despine(ax)
+    _fig_caption(fig, "Full-sample sweep shown for context; the annotated verdict is the "
+                      "walk-forward test, whose rule was chosen on the training era only.")
+    fig.savefig(path)
+    plt.close(fig)
+
+
 def plot_ml_benchmark(res: pd.DataFrame, path: str) -> None:
     """Out-of-sample log-loss difference vs the market, with bootstrap CIs."""
     _style()

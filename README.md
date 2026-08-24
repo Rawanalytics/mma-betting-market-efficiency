@@ -28,6 +28,7 @@ the tails. Longshots win less often than their price implies, and heavy favorite
 | Flat-bet return, heavy favorites −300 or shorter (n = 1,804) | **+1.5%** per unit [−0.7, +3.6] — above the vig-only benchmark |
 | Return-vs-price trend (OLS, fight-clustered) | slope +0.258, t = 3.76, p < 0.001: shorter prices are better bets |
 | Can public fighter stats beat the closing line? (2022–2026 out-of-sample) | **No** — best model improves log-loss by a statistically indistinguishable −0.003 |
+| Walk-forward test of a pre-registered rule (picked on 2010–2017, bet 2018–2026) | favorites ≤ −300: **+1.9%** per bet [−1.2, +4.7] on 975 bets — beats the vig, but p(ROI > 0) = 0.11 |
 
 A bookmaker margin of ~4.8% cannot explain a 30-cents-per-dollar loss on heavy underdogs. That is
 probability mispricing, not friction.
@@ -39,6 +40,21 @@ favorite ends **up 26 units** (1,804 bets, through the vig), while betting every
 underdog loses **355 units** (1,219 bets).
 
 ![Cumulative profit](figures/cumulative_pnl.png)
+
+**Is the bias exploitable?** Bias and exploitability are different claims, and the second demands a
+stricter test: picking the best-looking rule after seeing all 16 years is data snooping. The
+walk-forward test selects a favorite-cutoff rule on 2010–2017 only (by the most pessimistic
+criterion, the highest bootstrap lower bound) and stakes it blind on 2018–2026. The selected rule —
+flat-bet every favorite at −300 or shorter — returned **+1.9% per bet out of sample** (975 bets,
++18.1 units), far above the −4.0% an efficient market implies, but its CI still includes zero
+(one-sided p = 0.11). Model-guided betting (backing whichever side the fitted model prices above the
+market, `results/ml_edge_backtest.csv`) shows the same picture: small positive ROIs at higher edge
+thresholds, none statistically significant. So the honest answer: **the mispricing is real and a
+bettor exploiting it avoids nearly all of the vig, but at average closing prices it does not clear
+zero with statistical confidence** — any genuinely profitable implementation would have to lean on
+line shopping for best prices, which this dataset cannot test.
+
+![Exploitability](figures/exploitability.png)
 
 Two further results sharpen the picture. First, the bias is not a relic of the early, soft MMA
 market — the calibration slope rises across eras (1.03 in 2010–2015, 1.11 in 2016–2020, **1.21** in
@@ -90,10 +106,11 @@ against raw (vig-included) prices.
 │   ├── data.py              # download, cleaning, fight- and side-level tables
 │   ├── calibration.py       # Wilson CIs, calibration buckets, clustered logistic test, FDR
 │   ├── returns.py           # returns by band, cluster bootstrap, strategy backtests
+│   ├── exploit.py           # threshold sweep + walk-forward out-of-sample rule test
 │   ├── models.py            # ML benchmark vs the closing line
 │   └── plots.py             # publication figures
 ├── notebooks/analysis.ipynb # the full narrative analysis, executed
-├── tests/                   # 16 unit tests (pytest)
+├── tests/                   # 20 unit tests (pytest)
 ├── figures/                 # generated PNGs (committed)
 └── results/                 # generated tables: CSVs + summary.json (committed)
 ```

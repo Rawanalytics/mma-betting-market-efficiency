@@ -83,6 +83,36 @@
     "p_value": 0.00016672873010178336,
     "n_sides": 13792
   },
+  "walk_forward": {
+    "train_end": "2018-01-01",
+    "cutoffs_considered": [
+      -150,
+      -200,
+      -250,
+      -300,
+      -400,
+      -500,
+      -600,
+      -800
+    ],
+    "chosen_rule": "odds <= -300",
+    "chosen_cutoff": -300.0,
+    "train_n_bets": 829,
+    "train_roi": 0.00983612652945163,
+    "train_roi_ci": [
+      -0.02347587808222358,
+      0.04213346991819471
+    ],
+    "test_n_bets": 975,
+    "test_roi": 0.01857385531344218,
+    "test_roi_ci": [
+      -0.011791493646624528,
+      0.046791459864391816
+    ],
+    "test_p_roi_gt0": 0.106,
+    "test_vig_null": -0.04003498105275449,
+    "test_total_profit": 18.109508930606125
+  },
   "ml_benchmark": [
     {
       "model": "Market (de-vigged odds)",
