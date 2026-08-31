@@ -29,6 +29,7 @@ the tails. Longshots win less often than their price implies, and heavy favorite
 | Return-vs-price trend (OLS, fight-clustered) | slope +0.258, t = 3.76, p < 0.001: shorter prices are better bets |
 | Can public fighter stats beat the closing line? (2022–2026 out-of-sample) | **No** — best model improves log-loss by a statistically indistinguishable −0.003 |
 | Walk-forward test of a pre-registered rule (picked on 2010–2017, bet 2018–2026) | favorites ≤ −300: **+1.9%** per bet [−1.2, +4.7] on 975 bets — beats the vig, but p(ROI > 0) = 0.11 |
+| Same out-of-sample bets executed on Kalshi (official fee schedule), if the exchange mid tracks the de-vigged consensus | **+4.5%** per bet [+1.4, +7.4], p < 0.001; still +3.3% (p = 0.01) crossing a 1¢ half-spread — but +0.6% (p = 0.35) if the exchange price embeds the book's margin |
 
 A bookmaker margin of ~4.8% cannot explain a 30-cents-per-dollar loss on heavy underdogs. That is
 probability mispricing, not friction.
@@ -55,6 +56,26 @@ zero with statistical confidence** — any genuinely profitable implementation w
 line shopping for best prices, which this dataset cannot test.
 
 ![Exploitability](figures/exploitability.png)
+
+**What if the venue were a prediction market instead of a sportsbook?** At a book the
+friction is the margin inside the price (~3.5 points of overround here). On an event-contract
+exchange like Kalshi the price carries no vig; the frictions are an explicit trading fee —
+per the official schedule, taker fee = 0.07·P·(1−P) per contract, maker fee = 0.0175·P·(1−P),
+no settlement fee — plus the bid-ask spread. The fee is parabolic in price, so precisely where
+this study's edge lives (heavy favorites, P ≈ 0.75–0.90) it is smallest: 0.7–1.5% of stake,
+versus the ~4% a bettor loses to the vig at the book. Re-running the walk-forward
+out-of-sample bets under explicit execution scenarios (`src/mma_efficiency/costs.py`,
+`results/kalshi_fee_scenarios.csv`): **if the exchange mid tracks the de-vigged sportsbook
+consensus, the rule clears zero decisively — +4.5% per bet as a taker at the mid (p < 0.001),
++3.3% crossing a 1¢ half-spread (p = 0.01)** — and degrades to +2.1% (p = 0.08) at a 2¢
+half-spread and to +0.6% (p = 0.35) in the worst case where the exchange price embeds the
+book's full margin. Fees, in other words, are not the binding constraint; price formation is.
+The scenarios are counterfactual — Kalshi listed its first UFC markets in 2025, so no
+historical exchange prices exist for this sample — and 83%-priced favorites also concentrate
+risk: a 975-bet edge of ~5 points of win rate is real money only at size, and exchange depth
+at those prices is untested here.
+
+![Fee scenarios](figures/fees_scenarios.png)
 
 Two further results sharpen the picture. First, the bias is not a relic of the early, soft MMA
 market — the calibration slope rises across eras (1.03 in 2010–2015, 1.11 in 2016–2020, **1.21** in
@@ -107,10 +128,11 @@ against raw (vig-included) prices.
 │   ├── calibration.py       # Wilson CIs, calibration buckets, clustered logistic test, FDR
 │   ├── returns.py           # returns by band, cluster bootstrap, strategy backtests
 │   ├── exploit.py           # threshold sweep + walk-forward out-of-sample rule test
+│   ├── costs.py             # Kalshi fee model + execution-scenario backtests
 │   ├── models.py            # ML benchmark vs the closing line
 │   └── plots.py             # publication figures
 ├── notebooks/analysis.ipynb # the full narrative analysis, executed
-├── tests/                   # 20 unit tests (pytest)
+├── tests/                   # 27 unit tests (pytest)
 ├── figures/                 # generated PNGs (committed)
 └── results/                 # generated tables: CSVs + summary.json (committed)
 ```
@@ -138,9 +160,11 @@ Psychology.
 
 ## Disclaimer
 
-This is a statistical study of historical closing lines. It ignores bet limits, fees, line movement
-and availability, and it is **not** betting advice: the one "profitable" cell (heavy favorites,
-+1.5%) is economically thin with a confidence interval touching zero. The robust finding is the
+This is a statistical study of historical closing lines. It ignores bet limits, line movement
+and availability, and it is **not** betting advice. The sportsbook results are net of the vig but
+gross of everything else; the Kalshi scenarios apply the official fee schedule but rest on a
+counterfactual price assumption (exchange mid = de-vigged book consensus) that cannot be tested
+on this sample, because no exchange listed UFC fights before 2025. The robust finding is the
 asymmetry, not a money machine.
 
 ## License

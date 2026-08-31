@@ -312,6 +312,55 @@ def plot_threshold_sweep(sweep: pd.DataFrame, wf: dict, path: str) -> None:
     plt.close(fig)
 
 
+def plot_fee_scenarios(tab: pd.DataFrame, path: str) -> None:
+    """Out-of-sample ROI of the walk-forward favorites rule under each
+    execution scenario (sportsbook baseline vs Kalshi price/fee assumptions),
+    with fight-cluster bootstrap CIs."""
+    _style()
+    t = tab.reset_index(drop=True)
+    fig, ax = plt.subplots(figsize=(8.8, 4.6))
+    y = np.arange(len(t))[::-1]
+    roi = t["roi"] * 100
+
+    ax.axvline(0, color=MUTED, lw=1.4, zorder=2)
+    ax.errorbar(
+        roi, y,
+        xerr=[roi - t["ci_lo"] * 100, t["ci_hi"] * 100 - roi],
+        fmt="o", color=S1, ms=8, markeredgecolor=SURFACE, markeredgewidth=1.5,
+        ecolor=INK_2, elinewidth=1.4, capsize=3.5, capthick=1.4, zorder=3,
+    )
+    for yi, (_, row) in zip(y, t.iterrows()):
+        p = row["p_roi_gt0"]
+        p_txt = "p < 0.001" if p < 0.001 else f"p = {p:.2f}"
+        ax.text(row["roi"] * 100, yi + 0.24,
+                f"{row['roi']*100:+.1f}%  ({p_txt})",
+                ha="center", va="bottom", fontsize=8.8, color=INK,
+                fontweight="semibold")
+
+    labels = [
+        f"{row['label']}\nfee {row['mean_fee_pct_of_stake']:.1%} of stake"
+        if row["mean_fee_per_contract"] > 0 else row["label"]
+        for _, row in t.iterrows()
+    ]
+    ax.set_ylim(-0.55, len(t) - 0.2)
+    ax.set_yticks(y, labels)
+    ax.set_xlabel("Out-of-sample ROI per bet (%), 95% cluster-bootstrap CI; p = one-sided p(ROI ≤ 0)")
+    ax.set_title("The same bets, net of prediction-market costs")
+    ax.grid(True, axis="x", zorder=0)
+    ax.grid(False, axis="y")
+    _despine(ax)
+    _fig_caption(
+        fig,
+        "Walk-forward rule (favorites ≤ −300, chosen on 2010–2017) staked on 2018–2026, n = 975 bets.\n"
+        "Kalshi rows are counterfactual: fees follow the official schedule "
+        "(taker 0.07·P·(1−P), maker 0.0175·P·(1−P) per contract; no settlement fee); "
+        "prices assume the exchange mid tracks the de-vigged sportsbook consensus.",
+        y=-0.04,
+    )
+    fig.savefig(path)
+    plt.close(fig)
+
+
 def plot_ml_benchmark(res: pd.DataFrame, path: str) -> None:
     """Out-of-sample log-loss difference vs the market, with bootstrap CIs."""
     _style()

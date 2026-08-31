@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from mma_efficiency import calibration, data, exploit, models, plots, returns  # noqa: E402
+from mma_efficiency import calibration, costs, data, exploit, models, plots, returns  # noqa: E402
 
 ERAS = [
     ("2010–2015", "2010-01-01", "2016-01-01"),
@@ -42,7 +42,7 @@ def main() -> None:
     figures_dir.mkdir(exist_ok=True)
 
     # ------------------------------------------------------------------ data
-    print("[1/6] Loading data ...")
+    print("[1/8] Loading data ...")
     raw = data.load_raw(args.data)
     fights = data.build_fight_table(raw)
     sides = data.side_table(fights)
@@ -61,7 +61,7 @@ def main() -> None:
     }
 
     # --------------------------------------------------------- calibration
-    print("[2/6] Calibration tests ...")
+    print("[2/8] Calibration tests ...")
     cal_tab = calibration.bucket_binomial_tests(sides, "p_basic")
     cal_tab.to_csv(results_dir / "calibration_buckets.csv", index=False)
     # Robustness view: quantile bins with ~500 bets each, grouped by nearest
@@ -91,7 +91,7 @@ def main() -> None:
     ]
 
     # -------------------------------------------------------------- returns
-    print("[3/6] Returns by odds band ...")
+    print("[3/8] Returns by odds band ...")
     band_tab = returns.returns_by_band(sides)
     band_tab.to_csv(results_dir / "returns_by_band.csv", index=False)
     trend = returns.returns_trend_test(sides)
@@ -100,7 +100,7 @@ def main() -> None:
           f"(t = {trend['t_stat']:.2f}, p = {trend['p_value']:.2g})")
 
     # ------------------------------------------------------------- backtest
-    print("[4/6] Strategy backtests ...")
+    print("[4/8] Strategy backtests ...")
     bt = returns.backtest_rules(sides)
     bt.to_csv(results_dir / "backtest_strategies.csv", index=False)
     pnl_rules = {
@@ -112,7 +112,7 @@ def main() -> None:
     pnl = returns.cumulative_pnl(sides, pnl_rules)
 
     # ------------------------------------------------------- exploitability
-    print("[5/7] Exploitability: walk-forward test of a pre-registered rule ...")
+    print("[5/8] Exploitability: walk-forward test of a pre-registered rule ...")
     sweep_fav = exploit.threshold_sweep(sides)
     sweep_dog = exploit.threshold_sweep(sides, cutoffs=exploit.UNDERDOG_CUTOFFS)
     pd.concat([sweep_fav, sweep_dog]).to_csv(results_dir / "threshold_sweep.csv", index=False)
@@ -123,8 +123,38 @@ def main() -> None:
           f"(95% CI [{wf['test_roi_ci'][0]:+.2%}, {wf['test_roi_ci'][1]:+.2%}], "
           f"p(ROI>0) one-sided = {wf['test_p_roi_gt0']:.3f})")
 
+    # ------------------------------------------------ prediction-market costs
+    print("[6/8] Prediction-market execution: Kalshi fee scenarios ...")
+    split = pd.Timestamp(wf["train_end"])
+    wf_bets = sides[(sides["date"] >= split) & (sides["odds"] <= wf["chosen_cutoff"])]
+    fee_tab = costs.fee_scenario_table(wf_bets, seed=17)
+    fee_tab.insert(0, "sample", "walk_forward_oos")
+    full_bets = sides[sides["odds"] <= wf["chosen_cutoff"]]
+    fee_tab_full = costs.fee_scenario_table(full_bets, seed=19)
+    fee_tab_full.insert(0, "sample", "full_sample")
+    pd.concat([fee_tab, fee_tab_full]).to_csv(
+        results_dir / "kalshi_fee_scenarios.csv", index=False
+    )
+    summary["kalshi_fees"] = {
+        "fee_schedule": {
+            "source": "kalshi.com/docs/kalshi-fee-schedule.pdf (effective 2026-07-07)",
+            "taker": "0.07 * C * P * (1-P), rounded up; charged on execution only",
+            "maker": "0.0175 * C * P * (1-P); settlement, membership, ACH: free",
+        },
+        "walk_forward_oos": fee_tab.drop(columns="sample").to_dict("records"),
+        "breakeven": costs.breakeven_friction(wf_bets),
+    }
+    k = fee_tab.set_index("scenario")
+    print(f"      OOS rule ROI: book {k.loc['book_close','roi']:+.2%} | "
+          f"Kalshi mid taker {k.loc['kalshi_mid_taker','roi']:+.2%} "
+          f"(p = {k.loc['kalshi_mid_taker','p_roi_gt0']:.3f}) | "
+          f"mid+1c {k.loc['kalshi_spread1_taker','roi']:+.2%} "
+          f"(p = {k.loc['kalshi_spread1_taker','p_roi_gt0']:.3f}) | "
+          f"mid+2c {k.loc['kalshi_spread2_taker','roi']:+.2%} "
+          f"(p = {k.loc['kalshi_spread2_taker','p_roi_gt0']:.3f})")
+
     # ------------------------------------------------------------------- ML
-    print("[6/7] ML benchmark (public stats vs the closing line) ...")
+    print("[7/8] ML benchmark (public stats vs the closing line) ...")
     model_table = models.build_model_table(raw, fights)
     ml_res, ml_extra = models.run_benchmark(model_table, split_date=args.split_date)
     ml_res.to_csv(results_dir / "ml_benchmark.csv", index=False)
@@ -138,7 +168,7 @@ def main() -> None:
     summary["ml_benchmark"] = ml_res.drop(columns=["p_model_better"]).to_dict("records")
 
     # -------------------------------------------------------------- figures
-    print("[7/7] Figures ...")
+    print("[8/8] Figures ...")
     plots.plot_calibration(cal_tab, figures_dir / "calibration.png")
     plots.plot_calibration(
         cal_eq, figures_dir / "calibration_equal_count.png",
@@ -151,6 +181,7 @@ def main() -> None:
     plots.plot_cumulative_pnl(pnl, figures_dir / "cumulative_pnl.png")
     plots.plot_slope_stability(summary["era_slopes"], figures_dir / "slope_stability.png")
     plots.plot_threshold_sweep(sweep_fav, wf, figures_dir / "exploitability.png")
+    plots.plot_fee_scenarios(fee_tab, figures_dir / "fees_scenarios.png")
     plots.plot_ml_benchmark(ml_res, figures_dir / "ml_benchmark.png")
 
     with open(results_dir / "summary.json", "w") as fh:

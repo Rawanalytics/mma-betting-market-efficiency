@@ -113,6 +113,105 @@
     "test_vig_null": -0.04003498105275449,
     "test_total_profit": 18.109508930606125
   },
+  "kalshi_fees": {
+    "fee_schedule": {
+      "source": "kalshi.com/docs/kalshi-fee-schedule.pdf (effective 2026-07-07)",
+      "taker": "0.07 * C * P * (1-P), rounded up; charged on execution only",
+      "maker": "0.0175 * C * P * (1-P); settlement, membership, ACH: free"
+    },
+    "walk_forward_oos": [
+      {
+        "scenario": "book_close",
+        "label": "Sportsbook, closing line (baseline)",
+        "n_bets": 975,
+        "mean_price": 0.8158705779120737,
+        "mean_fee_per_contract": 0.0,
+        "mean_fee_pct_of_stake": 0.0,
+        "roi": 0.01857385531344218,
+        "ci_lo": -0.011945962918894529,
+        "ci_hi": 0.04657404222755502,
+        "p_roi_gt0": 0.09775,
+        "total_profit_per_unit": 18.109508930606125
+      },
+      {
+        "scenario": "kalshi_mid_taker",
+        "label": "Kalshi taker at de-vigged mid",
+        "n_bets": 975,
+        "mean_price": 0.7831945411455172,
+        "mean_fee_per_contract": 0.011725068732821507,
+        "mean_fee_pct_of_stake": 0.014938708569220464,
+        "roi": 0.045191337389533966,
+        "ci_lo": 0.013769064483410356,
+        "ci_hi": 0.0738788636815064,
+        "p_roi_gt0": 0.0005,
+        "total_profit_per_unit": 44.06155395479561
+      },
+      {
+        "scenario": "kalshi_spread1_taker",
+        "label": "Kalshi taker, mid + 1c half-spread",
+        "n_bets": 975,
+        "mean_price": 0.793194541145517,
+        "mean_fee_per_contract": 0.011321596375217784,
+        "mean_fee_pct_of_stake": 0.01425899038178295,
+        "roi": 0.03269591459975885,
+        "ci_lo": 0.001632710489369478,
+        "ci_hi": 0.06103797335499268,
+        "p_roi_gt0": 0.01175,
+        "total_profit_per_unit": 31.878516734764883
+      },
+      {
+        "scenario": "kalshi_spread2_taker",
+        "label": "Kalshi taker, mid + 2c half-spread",
+        "n_bets": 975,
+        "mean_price": 0.8031945411455171,
+        "mean_fee_per_contract": 0.010904124017614059,
+        "mean_fee_pct_of_stake": 0.013578333489426565,
+        "roi": 0.02051442045083835,
+        "ci_lo": -0.010161637190464675,
+        "ci_hi": 0.04851971058621708,
+        "p_roi_gt0": 0.0755,
+        "total_profit_per_unit": 20.001559939567393
+      },
+      {
+        "scenario": "kalshi_mid_maker",
+        "label": "Kalshi maker at de-vigged mid",
+        "n_bets": 975,
+        "mean_price": 0.7831945411455172,
+        "mean_fee_per_contract": 0.0029312671832053766,
+        "mean_fee_pct_of_stake": 0.0037790580329155783,
+        "roi": 0.05698930668304621,
+        "ci_lo": 0.025282636085930583,
+        "ci_hi": 0.08595888298232993,
+        "p_roi_gt0": 0.0,
+        "total_profit_per_unit": 55.56457401597006
+      },
+      {
+        "scenario": "kalshi_raw_taker",
+        "label": "Kalshi taker at book price (worst case)",
+        "n_bets": 975,
+        "mean_price": 0.8158705779120737,
+        "mean_fee_per_contract": 0.01034194808548249,
+        "mean_fee_pct_of_stake": 0.0127133074563553,
+        "roi": 0.005676900097594325,
+        "ci_lo": -0.024437506204761487,
+        "ci_hi": 0.03318946976337633,
+        "p_roi_gt0": 0.352,
+        "total_profit_per_unit": 5.5349775951544675
+      }
+    ],
+    "breakeven": {
+      "n_bets": 975,
+      "win_rate": 0.8317948717948718,
+      "mean_mid": 0.7831945411455172,
+      "mean_raw": 0.8158705779120737,
+      "edge_vs_mid": 0.04860033064935454,
+      "edge_vs_raw": 0.015924293882798035,
+      "breakeven_total_friction_pct_of_mid": 0.06205397011356939,
+      "kalshi_taker_fee_at_mid": 0.011725068732821507,
+      "kalshi_taker_fee_at_mid_pct": 0.014970825403956682,
+      "residual_for_spread_cents": 3.6875261916533035
+    }
+  },
   "ml_benchmark": [
     {
       "model": "Market (de-vigged odds)",
