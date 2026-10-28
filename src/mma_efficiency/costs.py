@@ -38,6 +38,9 @@ Under "price = p_raw, fee = 0" this reduces *exactly* to the sportsbook
 flat-bet return used everywhere else in the repo (won/p_raw - 1), which is
 unit-tested — the scenarios are strict generalizations of the baseline.
 
+The field module scores these price assumptions against live Kalshi quotes
+collected going forward; see ``field.py`` and ``data/live_quotes.csv``.
+
 All CIs and p-values use the same fight-cluster bootstrap as the rest of the
 repo. Fees follow the exact formula without per-order rounding (rounding adds
 at most one cent per order, negligible at any realistic order size).

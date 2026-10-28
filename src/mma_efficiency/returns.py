@@ -42,6 +42,8 @@ ODDS_BANDS = [
 
 
 def band_label(odds: pd.Series) -> pd.Series:
+    """Map each American price to the name of the ODDS_BANDS interval that
+    contains it (favorites first, underdogs last)."""
     lab = pd.Series(pd.NA, index=odds.index, dtype="object")
     for lo, hi, name in ODDS_BANDS:
         lab[(odds >= lo) & (odds < hi)] = name
@@ -55,7 +57,13 @@ def _cluster_bootstrap_mean(
     seed: int = 7,
     alpha: float = 0.05,
 ):
-    """Bootstrap CI for the mean of `values`, resampling cluster ids."""
+    """Bootstrap CI for the mean of `values`, resampling cluster ids.
+
+    Returns (lo, hi, boot_means); the full bootstrap distribution is handed
+    back so callers can compute p-values against whatever null they need
+    (recenter the draws on the null, then ask how extreme the observed mean
+    is).
+    """
     rng = np.random.default_rng(seed)
     uniq, inv = np.unique(clusters, return_inverse=True)
     # sum and count of values per cluster

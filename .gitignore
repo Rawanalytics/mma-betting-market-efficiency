@@ -1,5 +1,6 @@
-# data is downloaded by run_analysis.py / src/mma_efficiency/data.py
-data/*.csv
+# the fight dataset is downloaded by run_analysis.py / src/mma_efficiency/data.py;
+# the hand-collected live-quote snapshots (data/live_quotes.csv) ARE committed
+data/ufc-master.csv
 
 __pycache__/
 *.py[cod]

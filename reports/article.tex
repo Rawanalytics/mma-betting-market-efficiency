@@ -22,7 +22,7 @@ and Its Exploitability Net of Prediction-Market Costs}}
 \author{Rawi Baransy\thanks{rawi.baransy@gmail.com. All results in this paper regenerate from a single
 command (\texttt{python run\_analysis.py}) in the accompanying repository; see the Reproducibility
 statement. This paper is a statistical study of historical prices and is not betting advice.}}
-\date{August 24, 2026}
+\date{October 28, 2026}
 
 \begin{document}
 \maketitle
@@ -45,8 +45,10 @@ a regulated prediction market using Kalshi's official fee schedule, where the ta
 heavy-favorite prices is only $0.7$--$1.8\%$ of stake ($1.5\%$ at the sample's mean price). If the exchange mid tracks the \devig{}
 sportsbook consensus, the same out-of-sample bets return $+4.5\%$ per bet ($p<0.001$), and remain
 profitable across a one-cent half-spread ($+3.3\%$, $p=0.01$); the edge dies only if exchange prices
-embed the bookmaker's margin ($+0.6\%$, $p=0.35$). Explicit trading costs are therefore not the
-binding constraint on exploiting the anomaly --- price formation and liquidity are.
+embed the bookmaker's margin ($+0.6\%$, $p=0.35$). A pilot field check of live Kalshi quotes on two
+2026 cards finds heavy-favorite asks about two cents above the \devig{} consensus --- partial
+correction, consistent with a thin rather than decisive taker edge. Explicit trading costs are
+therefore not the binding constraint on exploiting the anomaly --- price formation and liquidity are.
 \end{abstract}
 
 \section{Introduction}
@@ -63,6 +65,10 @@ misperception of small probabilities); \citet{snowberg2010} show field data favo
 misperception account. A separate supply-side mechanism is \citet{shin1993}: bookmakers shade
 longshot prices to defend against insiders, generating FLB-like patterns even with unbiased
 bettors --- which makes Shin's model the natural conservative benchmark when measuring the bias.
+For MMA specifically, the evidence is unsettled: in a recent study built on odds aggregated from
+tapology.com, \citet{miller2026} find no favorite--longshot bias, alongside inefficiencies tied to
+age and travel. The closing-line sample here reaches the opposite calibration verdict, and
+Section~\ref{sec:calibration} returns to the likely sources of the discrepancy.
 
 Mixed martial arts is a useful laboratory for three reasons. First, every bout is a two-outcome
 contest with a single dominant bet type (the moneyline), so implied probabilities are clean and the
@@ -79,8 +85,8 @@ betting rule on an early era and evaluates it blind on a later one, avoiding the
 critique that applies to full-sample strategy returns. (iii) It asks --- to our knowledge for the
 first time in this literature --- whether the measured edge survives \emph{prediction-market}
 execution costs, using the exact fee schedule of Kalshi, the largest CFTC-regulated event-contract
-exchange, and explicit counterfactual assumptions about exchange price formation
-\citep{wolfers2004, kalshifees}.
+exchange, explicit assumptions about exchange price formation, and a first pilot of live exchange
+quotes collected against the multi-book consensus \citep{wolfers2004, kalshifees}.
 
 The answer to the exploitability question is sharp but conditional. At average sportsbook closing
 prices the edge on heavy favorites beats the vig but does not clear zero with statistical
@@ -91,7 +97,8 @@ price), versus roughly $4\%$ lost to the vig at a book. Under the standard assum
 consensus, the out-of-sample favorites rule returns $+4.5\%$ per bet ($p<0.001$) net of fees, and
 $+3.3\%$ ($p=0.01$) after also crossing a one-cent half-spread. The result reverses only when the
 assumed exchange price embeds the book's full margin. Fees, in short, are a rounding error on this
-anomaly; the open question is what prices the exchange actually offers.
+anomaly; the open question is what prices the exchange actually offers --- and the pilot snapshots
+in Section~\ref{sec:field} give a first, preliminary reading.
 
 \section{Data}
 
@@ -110,6 +117,12 @@ The unit of observation throughout is one \emph{side} of a fight --- one price a
 other loses), so no test in this paper treats them as independent: regressions cluster standard
 errors by fight, bootstrap confidence intervals resample whole fights, and calibration buckets
 de-duplicate fights whose two sides land in the same bucket.
+
+A second, much smaller dataset supports the field check of Section~\ref{sec:field}: paired
+snapshots of Kalshi's live UFC order books and the contemporaneous multi-book sportsbook lines,
+collected card by card beginning August 2026 (two cards, 24 fights so far; one further bout was
+dropped because only a single book quoted it and the exchange spread was anomalous). It is
+archived in the repository as \texttt{data/live\_quotes.csv}.
 
 \section{Empirical framework}
 
@@ -167,7 +180,8 @@ out-of-sample numbers count as evidence.
 H4 does not survive realistic exchange execution. Test: reprice the same bets as event contracts
 under Kalshi's official fee schedule \citep{kalshifees} --- taker fee $0.07\,C\,P(1-P)$, maker fee
 $0.0175\,C\,P(1-P)$ per contract, charged on execution only, with free settlement --- under
-explicit price-formation scenarios described in Section~\ref{sec:fees}.
+explicit price-formation scenarios described in Section~\ref{sec:fees}, and score those scenarios
+against the live-quote snapshots of Section~\ref{sec:field}.
 
 \subsection{Inference conventions}
 
@@ -183,6 +197,7 @@ observations.
 \section{Results}
 
 \subsection{Calibration: efficient middle, bent tails (H1)}
+\label{sec:calibration}
 
 Figure~\ref{fig:calibration} shows the calibration curve on \devig{} probabilities in probability
 deciles with 95\% Wilson intervals. Through the middle of the range the market is nearly perfectly
@@ -209,6 +224,19 @@ for raw probabilities as well ($1.063$, $p=0.061$; the margin itself masks part 
 distortion), and --- the conservative headline --- remains above one under Shin de-vigging
 ($1.068$, $p=0.046$). H1 is rejected: prices are too timid at the extremes even after allowing
 for insider-defensive price shading.
+
+This verdict differs from \citet{miller2026}, who find no favorite--longshot bias in MMA using
+odds sourced via tapology.com. Three design differences plausibly account for the gap. The odds
+provenance differs: this sample is a single aggregated \emph{closing} line per fight, whereas
+listed odds collected earlier in the price-discovery process, or from a different aggregation,
+embed different margins and different information sets. The tests differ: the logit-scale M--Z
+regression with fight-clustered standard errors concentrates power on exactly the tail curvature
+at issue, and the economic profile of Table~\ref{tab:bands} --- a $-27$ to $-37$ cent per-dollar
+flat-bet loss on heavy underdogs against a four-cent margin --- is difficult to generate without
+tail mispricing. And the samples differ in span and composition. Adjudicating between the two
+results on a common dataset is a natural follow-up; at minimum, the disagreement shows the MMA
+evidence is sensitive to odds provenance, which argues for the closing line as the cleanest
+benchmark.
 
 \begin{table}[t]
 \centering
@@ -340,7 +368,7 @@ Model & Log loss & Brier & AUC & $\Delta$ log loss vs.\ market [95\% CI] \\
 Market (\devig{} odds)          & 0.588 & 0.201 & 0.642 & --- \\
 Stats only (logistic)           & 0.606 & 0.208 & 0.583 & $+0.018$ $[+0.009, +0.027]$ \\
 Stats $+$ market (logistic)     & 0.585 & 0.201 & 0.645 & $-0.003$ $[-0.008, +0.002]$ \\
-Stats $+$ market (grad.\ boost) & 0.599 & 0.207 & 0.632 & $+0.011$ $[+0.001, +0.021]$ \\
+Stats $+$ market (grad.\ boost) & 0.598 & 0.206 & 0.634 & $+0.010$ $[-0.000, +0.020]$ \\
 \bottomrule
 \end{tabular}
 \begin{tablenotes}\footnotesize
@@ -395,8 +423,9 @@ sits, while the sportsbook's effective margin (${\sim}4\%$ of stake) does not sh
 favorites.
 
 Kalshi listed its first UFC markets in 2025, so no historical exchange prices exist for this
-sample, and H5 cannot be tested against realized exchange quotes. We therefore model execution
-under explicit counterfactual price scenarios spanning optimistic to worst-case. Staking \$1 buys
+sample, and H5 cannot be tested against realized exchange quotes over 2010--2026. We therefore
+model execution under explicit price scenarios spanning optimistic to worst-case, and then score
+those scenarios against live quotes in Section~\ref{sec:field}. Staking \$1 buys
 $1/(P + \mathrm{fee})$ contracts; the per-dollar return is $\text{won}/(P+\mathrm{fee}) - 1$.
 Under (price $=$ raw closing implied probability, fee $=0$) this accounting reproduces the
 sportsbook flat-bet return exactly --- a unit-tested identity, so the scenarios generalize the
@@ -454,7 +483,7 @@ formation: \emph{whether} Kalshi's UFC mids actually sit at the \devig{} book co
 book-equivalent prices, or --- if exchange participants correct the bias --- at the true
 probability, at which point no venue rescues the strategy. Evidence that prediction markets
 exhibit their own favorite--longshot bias \citep{page2013} makes the consensus-tracking scenario
-plausible, but only forward collection of exchange quotes can settle it.
+plausible a priori; the next section brings the first direct observations to bear.
 
 \begin{figure}[t]
   \centering
@@ -465,6 +494,49 @@ plausible, but only forward collection of exchange quotes can settle it.
   \label{fig:fees}
 \end{figure}
 
+\subsection{Early field evidence: where live exchange prices actually sit}
+\label{sec:field}
+
+Which scenario row describes reality is an empirical question, and since Kalshi now lists every
+UFC bout, it can be answered by direct observation. I began collecting paired snapshots in August
+2026: for each fight on an upcoming card, Kalshi's best bid and ask from the public order book,
+and the contemporaneous moneyline range across seven sportsbooks from a multi-book aggregator.
+The consensus is approximated as the probability-space midpoint of each side's best and worst
+price, de-vigged proportionally; the statistic of interest is the favorite's ask minus the
+\devig{} consensus --- what a taker actually pays above the ``mid tracks consensus'' benchmark.
+
+Two cards are in hand so far (August 29 and November 1, 2026; 24 fights, of which 8 had a
+consensus favorite at $-300$ or shorter). Three observations stand out
+(Figure~\ref{fig:field}; per-fight table in \texttt{results/field\_quote\_gaps.csv}). First, the
+exchange microstructure is as cheap as the fee analysis assumed: quoted spreads average 1.2
+cents, and the two sides' asks sum to roughly 1.00--1.01 --- there is essentially no vig in the
+prices. Second, favorite asks nonetheless sit \emph{above} the \devig{} consensus: $+2.2$ cents
+on average for the heavy favorites the strategy would trade ($+1.6$ cents at the mid), $+1.7$
+cents across all fights. Third, the gap is persistent across both cards rather than an artifact
+of one market. Mapped onto Table~\ref{tab:fees}, a two-cent taker gap corresponds to the
+$+2.1\%$-per-bet row ($p = 0.076$ historically): \emph{partial} correction of the favorite
+underpricing --- far from the book's four-cent margin, but also short of the frictionless mid.
+Resting bids one tick below the ask would execute near the consensus itself, between the maker
+and taker rows, with fill risk this data cannot measure.
+
+These are pilot numbers, to be treated as an illustration rather than an estimate: two cards,
+snapshots taken days before close while the historical benchmark is the closing line, and a
+consensus proxied from a best/worst range rather than the full quote list. The collection design
+that would settle H5 --- snapshots at a fixed short horizon before each card's close, 20--30
+cards, roughly 50 heavy favorites --- pins the mean gap to within about half a cent and is
+underway; the repository's \texttt{field} module ingests each new card as a CSV row and
+regenerates this analysis.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\textwidth]{field_gaps.png}
+  \caption{Pilot field check: each point is one fight's favorite; the vertical position is the
+  Kalshi ask minus the \devig{} multi-book consensus, with the cost model's scenario rows as
+  dashed references. Large markers are consensus favorites of $-300$ or shorter --- the subset
+  the walk-forward strategy trades.}
+  \label{fig:field}
+\end{figure}
+
 \section{Verification and robustness audit}
 
 Because this study makes an economic claim, the analysis was audited end to end before results
@@ -472,8 +544,9 @@ were interpreted. The audit covered five classes of error.
 
 \emph{Reproducibility.} The entire pipeline --- data filters, tests, tables, figures --- runs
 from one command with fixed random seeds, and every number in this paper regenerates
-bit-identically from the frozen dataset snapshot. The repository ships 27 unit tests covering the
-statistical machinery.
+bit-identically from the frozen dataset snapshot (one library-version caveat for the
+gradient-boosting row is noted in the Reproducibility statement). The repository ships 32 unit
+tests covering the statistical machinery.
 
 \emph{Statistical dependence.} The two sides of a fight are mirror images. Every regression
 clusters by fight; every bootstrap resamples whole fights; calibration buckets de-duplicate
@@ -496,23 +569,29 @@ FDR control.
 pre-fight career columns; fights oriented favorite-vs-underdog so corner labels cannot leak; the
 dataset's own pre-computed differential columns (which mix orientations) are not used. The
 fee-scenario accounting was validated by an identity test: with price set to the raw close and
-zero fee it reproduces the sportsbook return series exactly.
+zero fee it reproduces the sportsbook return series exactly. The field module's gap computation
+is validated the same way: synthetic snapshots constructed backwards from a known gap must return
+exactly that gap.
 
 \section{Limitations}
 
 Five limitations bound the conclusions. First, odds are closing lines from a single aggregated
 source; intraday movement, best-price line shopping across books, and bet limits are outside the
-data. Second, the exchange scenarios are counterfactual: Kalshi listed no UFC markets before
-2025, so the mid-tracks-consensus assumption, quoted depth at 80-cent-plus prices, position
-limits, and maker fill rates are all untested on this sample --- the maker row in particular is
-an upper bound that ignores adverse selection. Third, although the walk-forward protocol
-guards against rule snooping, the broader research design (studying favorites because the FLB
-literature predicts favorites) is itself informed by prior evidence; the protection is the
-out-of-sample era, not ignorance of the hypothesis. Fourth, results are UFC-specific; other
-promotions' markets may differ. Fifth, the profitable cell is concentrated: heavy favorites win
-$83\%$ of the time, so the strategy's returns are a long series of small gains punctuated by
-$-100\%$ losses, and its five-point probability edge is real money only at stake sizes the
-historical exchange order books may not have absorbed.
+data. Second, the exchange analysis of Section~\ref{sec:fees} is counterfactual for the
+historical sample: Kalshi listed no UFC markets before 2025, so the scenario rows cannot be
+tested against realized 2010--2026 exchange quotes. The field data of Section~\ref{sec:field}
+begin to discipline the price assumption going forward, but two mid-week cards are a pilot ---
+exchange depth at 80-cent-plus prices, position limits, and maker fill rates all remain
+unmeasured, and the maker row in particular is an upper bound that ignores adverse selection.
+Third, although the walk-forward protocol guards against rule snooping, the broader research
+design (studying favorites because the FLB literature predicts favorites) is itself informed by
+prior evidence; the protection is the out-of-sample era, not ignorance of the hypothesis. Fourth,
+results are UFC-specific; other promotions' markets may differ, and \citet{miller2026} show that
+MMA conclusions can differ with odds provenance. Fifth, the profitable cell is concentrated:
+heavy favorites win $83\%$ of the time, so the strategy's returns are a long series of small
+gains punctuated by $-100\%$ losses, and its five-point probability edge is real money only at
+stake sizes the observed order books --- open interest of a few hundred to a few tens of
+thousands of dollars per side --- may not absorb.
 
 \section{Conclusion}
 
@@ -532,22 +611,29 @@ statistically ($+1.9\%$, $p = 0.11$), because the book's margin consumes most of
 Kalshi's fee at heavy-favorite prices is roughly a third of that margin at the sample's mean
 price, and settlement is free; under the standard assumption that exchange mids track the \devig{} book consensus, the
 same bets return $+4.5\%$ per bet ($p < 0.001$) net of fees, surviving a realistic spread. What
-the fee schedule cannot guarantee is the price: if exchange participants price fights at
-book-equivalent levels --- or correct the bias entirely --- the edge shrinks to noise. The
-binding constraints on exploiting a seventy-year-old anomaly in a modern market are price
-formation and depth, not explicit transaction costs. Collecting exchange quotes on UFC markets
-going forward, now that they exist, would convert H5 from a scenario analysis into a direct
-test, and is the natural next step.
+the fee schedule cannot guarantee is the price. The first direct observations --- two pilot cards
+of live quotes --- find heavy-favorite asks about two cents above the \devig{} consensus:
+spreads are tight and the vig is gone, but exchange participants appear to correct part of the
+favorite underpricing, leaving a taker in the thin $+2\%$-per-bet regime rather than the
+decisive one. The binding constraints on exploiting a seventy-year-old anomaly in a modern
+market are price formation and depth, not explicit transaction costs. Completing the quote
+collection at closing horizons --- and, if the gap holds, testing maker execution with its fill
+risk --- converts H5 from scenario analysis into measurement, and is the project's next step.
 
 \section*{Reproducibility statement}
 
 All results derive from a pinned snapshot of the public Ultimate UFC Dataset (6{,}904 fights,
 2010-03-21 to 2026-03-28) and regenerate bit-identically via \texttt{python run\_analysis.py}
-(fixed seeds, $B = 4{,}000$ bootstrap resamples throughout; 27 passing unit tests via
-\texttt{pytest}). The repository contains the full pipeline: odds conversion and de-vigging
+(fixed seeds, $B = 4{,}000$ bootstrap resamples throughout; 32 passing unit tests via
+\texttt{pytest}), with one caveat: the gradient-boosting benchmark row varies at the third
+decimal with the scikit-learn version, because the estimator's internals evolve across releases
+even at a fixed seed. Committed results were generated with numpy 2.5.3, pandas 3.0.5, scipy
+1.18.1, statsmodels 0.15.0, scikit-learn 1.9.1, and matplotlib 3.11.2. The repository contains
+the full pipeline: odds conversion and de-vigging
 (proportional, power, Shin), calibration and returns tests, the walk-forward protocol, the ML
-benchmark, and the Kalshi fee model (\texttt{src/mma\_efficiency/costs.py}), together with all
-tables (\texttt{results/}) and figures (\texttt{figures/}) used here.
+benchmark, the Kalshi fee model (\texttt{src/mma\_efficiency/costs.py}), and the live-quote
+field analysis (\texttt{src/mma\_efficiency/field.py} with \texttt{data/live\_quotes.csv}),
+together with all tables (\texttt{results/}) and figures (\texttt{figures/}) used here.
 
 \begin{thebibliography}{99}
 
@@ -567,6 +653,10 @@ Griffith, R.~M. (1949). Odds adjustments by American horse-race bettors.
 \bibitem[Kalshi(2026)]{kalshifees}
 Kalshi (2026). \emph{Fee schedule}, effective July 7, 2026.
 \url{https://kalshi.com/docs/kalshi-fee-schedule.pdf}.
+
+\bibitem[Miller and Nichols(2026)]{miller2026}
+Miller, K.~M., and Nichols, M.~W. (2026). Efficient market insights and favorite-longshot bias
+in mixed martial arts betting markets. \emph{Journal of Economics and Finance}, 50(1).
 
 \bibitem[Mincer and Zarnowitz(1969)]{mincer1969}
 Mincer, J., and Zarnowitz, V. (1969). The evaluation of economic forecasts. In J.~Mincer (ed.),

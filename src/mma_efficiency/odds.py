@@ -87,6 +87,7 @@ def devig_power(p_a, p_b, tol=1e-12, max_iter=200):
     hi = np.full_like(p_a, 4.0)
 
     def s(k):
+        """Bisection objective: de-vigged probabilities' excess over 1 at power k."""
         return p_a**k + p_b**k - 1.0
 
     # s is decreasing in k; ensure bracket
@@ -131,6 +132,7 @@ def devig_shin(p_a, p_b, tol=1e-12, max_iter=200):
     hi = np.full_like(p_a, 0.5)
 
     def s(z):
+        """Bisection objective: Shin probabilities' excess over 1 at insider share z."""
         return (
             _shin_probs_given_z(p_a, r, z)
             + _shin_probs_given_z(p_b, r, z)

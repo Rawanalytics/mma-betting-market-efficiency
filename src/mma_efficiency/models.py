@@ -98,6 +98,7 @@ def build_model_table(raw: pd.DataFrame, fights: pd.DataFrame) -> pd.DataFrame:
 
 
 def _metrics(y: np.ndarray, p: np.ndarray) -> dict:
+    """Proper-scoring-rule metrics for one probability vector."""
     p = np.clip(p, 1e-6, 1 - 1e-6)
     return {
         "log_loss": float(log_loss(y, p)),
@@ -143,6 +144,7 @@ def run_benchmark(
     y_tr, y_te = train["y"].to_numpy(), test["y"].to_numpy()
 
     def lr_pipeline():
+        """Median-impute -> standardize -> ridge-regularized logistic regression."""
         return Pipeline(
             [
                 ("impute", SimpleImputer(strategy="median")),
@@ -152,6 +154,7 @@ def run_benchmark(
         )
 
     def hgb():
+        """Shallow, regularized gradient boosting; depth and L2 chosen to resist overfit."""
         return HistGradientBoostingClassifier(
             max_depth=3,
             learning_rate=0.06,

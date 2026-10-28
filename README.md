@@ -30,6 +30,7 @@ the tails. Longshots win less often than their price implies, and heavy favorite
 | Can public fighter stats beat the closing line? (2022–2026 out-of-sample) | **No** — best model improves log-loss by a statistically indistinguishable −0.003 |
 | Walk-forward test of a pre-registered rule (picked on 2010–2017, bet 2018–2026) | favorites ≤ −300: **+1.9%** per bet [−1.2, +4.7] on 975 bets — beats the vig, but p(ROI > 0) = 0.11 |
 | Same out-of-sample bets executed on Kalshi (official fee schedule), if the exchange mid tracks the de-vigged consensus | **+4.5%** per bet [+1.4, +7.4], p < 0.001; still +3.3% (p = 0.01) crossing a 1¢ half-spread — but +0.6% (p = 0.35) if the exchange price embeds the book's margin |
+| Field check: live Kalshi UFC quotes vs the de-vigged multi-book consensus (2 pilot cards, 24 fights) | heavy-favorite asks sit **+2.2¢** above the consensus (spreads ~1¢, asks sum to ~1.00–1.01) — the "mid + 2¢" regime: partial correction, thin taker edge |
 
 A bookmaker margin of ~4.8% cannot explain a 30-cents-per-dollar loss on heavy underdogs. That is
 probability mispricing, not friction.
@@ -62,7 +63,7 @@ friction is the margin inside the price (~3.5 points of overround here). On an e
 exchange like Kalshi the price carries no vig; the frictions are an explicit trading fee —
 per the official schedule, taker fee = 0.07·P·(1−P) per contract, maker fee = 0.0175·P·(1−P),
 no settlement fee — plus the bid-ask spread. The fee is parabolic in price, so precisely where
-this study's edge lives (heavy favorites, P ≈ 0.75–0.90) it is smallest: 0.7–1.5% of stake,
+this study's edge lives (heavy favorites, P ≈ 0.75–0.90) it is smallest: 0.7–1.8% of stake,
 versus the ~4% a bettor loses to the vig at the book. Re-running the walk-forward
 out-of-sample bets under explicit execution scenarios (`src/mma_efficiency/costs.py`,
 `results/kalshi_fee_scenarios.csv`): **if the exchange mid tracks the de-vigged sportsbook
@@ -76,6 +77,22 @@ risk: a 975-bet edge of ~5 points of win rate is real money only at size, and ex
 at those prices is untested here.
 
 ![Fee scenarios](figures/fees_scenarios.png)
+
+**Which scenario is real? First field evidence.** Since Kalshi now lists every UFC bout, the
+price-formation question is directly observable. I began collecting paired snapshots in August
+2026: Kalshi's live bid/ask for every fight on an upcoming card next to the multi-book moneyline
+range at the same moment (`data/live_quotes.csv`, analyzed by `src/mma_efficiency/field.py`).
+Across the first two cards (24 fights, 8 with a consensus favorite at −300 or shorter): spreads
+average ~1.2¢ and the two asks sum to ~1.00–1.01 — the vig really is gone — but heavy-favorite
+asks sit **+2.2¢ above the de-vigged consensus** on average (+1.6¢ at the mid). That lands in the
+"mid + 2¢" row of the scenario table: exchange participants appear to correct *part* of the
+favorite underpricing, leaving a taker in the thin +2%-per-bet regime rather than the decisive
++4.5% one. Resting orders one tick inside the spread would execute near the consensus itself,
+with fill risk this data can't measure. Two mid-week cards are a pilot, not an estimate — the
+target design (snapshots near close, 20–30 cards) pins the mean gap to ~±0.5¢, and each new card
+is one CSV row away from inclusion.
+
+![Field gaps](figures/field_gaps.png)
 
 Two further results sharpen the picture. First, the bias is not a relic of the early, soft MMA
 market — the calibration slope rises across eras (1.03 in 2010–2015, 1.11 in 2016–2020, **1.21** in
@@ -112,6 +129,13 @@ one fight are de-duplicated. The efficient-market benchmark for flat-bet returns
 the vig, nothing more), which under proportional vig is identical for every price — what makes the
 return-by-band profile a valid test.
 
+**Related evidence.** Miller & Nichols (2026, *Journal of Economics and Finance*) find no
+favorite–longshot bias in MMA using odds sourced via tapology.com. The closing-line sample here
+reaches the opposite conclusion; the paper (`reports/article.pdf`, §4.1) discusses the likely
+sources of the discrepancy — odds provenance, test design, and sample construction — and why the
+−27 to −37 cents-per-dollar flat-bet losses on heavy underdogs are hard to square with unbiased
+tail prices.
+
 **ML benchmark (semi-strong efficiency).** One row per fight oriented favorite-vs-underdog (so the
 red/blue corner assignment can't leak), features computed directly from per-corner career columns,
 chronological train/test split (≤2021 / 2022–2026), evaluated on out-of-sample log-loss against the
@@ -129,10 +153,13 @@ against raw (vig-included) prices.
 │   ├── returns.py           # returns by band, cluster bootstrap, strategy backtests
 │   ├── exploit.py           # threshold sweep + walk-forward out-of-sample rule test
 │   ├── costs.py             # Kalshi fee model + execution-scenario backtests
+│   ├── field.py             # live Kalshi quotes vs de-vigged consensus (ongoing collection)
 │   ├── models.py            # ML benchmark vs the closing line
 │   └── plots.py             # publication figures
+├── data/live_quotes.csv     # hand-collected exchange/book snapshots, one row per fight
 ├── notebooks/analysis.ipynb # the full narrative analysis, executed
-├── tests/                   # 27 unit tests (pytest)
+├── reports/                 # the research article (PDF + LaTeX source)
+├── tests/                   # 32 unit tests (pytest)
 ├── figures/                 # generated PNGs (committed)
 └── results/                 # generated tables: CSVs + summary.json (committed)
 ```
@@ -156,16 +183,17 @@ Claims*, Economic Journal. · Snowberg, E. & Wolfers, J. (2010), *Explaining the
 Bias: Is it Risk-Love or Misperceptions?*, Journal of Political Economy. · Štrumbelj, E. (2014),
 *On determining probability forecasts from betting odds*, International Journal of Forecasting. ·
 Griffith, R.M. (1949), *Odds adjustments by American horse-race bettors*, American Journal of
-Psychology.
+Psychology. · Miller, K.M. & Nichols, M.W. (2026), *Efficient market insights and favorite-longshot
+bias in mixed martial arts betting markets*, Journal of Economics and Finance.
 
 ## Disclaimer
 
 This is a statistical study of historical closing lines. It ignores bet limits, line movement
 and availability, and it is **not** betting advice. The sportsbook results are net of the vig but
-gross of everything else; the Kalshi scenarios apply the official fee schedule but rest on a
-counterfactual price assumption (exchange mid = de-vigged book consensus) that cannot be tested
-on this sample, because no exchange listed UFC fights before 2025. The robust finding is the
-asymmetry, not a money machine.
+gross of everything else; the Kalshi scenarios apply the official fee schedule to a price
+assumption that the two pilot cards of live quotes only begin to test — mid-week snapshots on two
+cards are an illustration, not an estimate. The robust finding is the asymmetry, not a money
+machine.
 
 ## License
 

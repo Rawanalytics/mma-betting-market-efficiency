@@ -29,6 +29,7 @@ STRATEGY_COLORS = [S1, S2, S3, S4]
 
 
 def _style() -> None:
+    """Apply the shared matplotlib rcParams used by every figure."""
     mpl.rcParams.update(
         {
             "figure.facecolor": SURFACE,
@@ -58,11 +59,13 @@ def _style() -> None:
 
 
 def _despine(ax, keep=("left", "bottom")):
+    """Hide all axis spines except the ones named in `keep`."""
     for side in ("top", "right", "left", "bottom"):
         ax.spines[side].set_visible(side in keep)
 
 
 def _fig_caption(fig, text: str, y: float = -0.01) -> None:
+    """Small muted caption anchored to the bottom-left of the figure."""
     fig.text(0.01, y, text, ha="left", va="top", fontsize=8.5, color=MUTED)
 
 
@@ -356,6 +359,58 @@ def plot_fee_scenarios(tab: pd.DataFrame, path: str) -> None:
         "(taker 0.07·P·(1−P), maker 0.0175·P·(1−P) per contract; no settlement fee); "
         "prices assume the exchange mid tracks the de-vigged sportsbook consensus.",
         y=-0.04,
+    )
+    fig.savefig(path)
+    plt.close(fig)
+
+
+def plot_field_gaps(gaps: pd.DataFrame, path: str) -> None:
+    """Field check: where live Kalshi favorite prices sit relative to the
+    de-vigged sportsbook consensus, per fight, colored by card.
+
+    The dashed reference lines mark the execution scenarios of the cost
+    model: a gap of 0 is 'taker at the mid', 1 and 2 cents are the spread
+    scenarios, and the mean vig share (~3-4 cents on a heavy favorite) is
+    the worst case where the exchange embeds the book's full margin.
+    """
+    _style()
+    fig, ax = plt.subplots(figsize=(8.8, 5.0))
+
+    for yref, lab in ((0.0, "taker at the mid (+4.5%/bet historically)"),
+                      (1.0, "mid + 1c (+3.3%)"),
+                      (2.0, "mid + 2c (+2.1%)")):
+        ax.axhline(yref, color=BASELINE, lw=1.1, ls="--", zorder=1)
+        # x in axes fraction, y in data coordinates: labels hug the right
+        # edge inside the plot regardless of the data's x-range.
+        ax.text(0.99, yref + 0.06, lab, transform=ax.get_yaxis_transform(),
+                fontsize=8.2, color=MUTED, va="bottom", ha="right")
+
+    cards = sorted(gaps["card_date"].dt.strftime("%Y-%m-%d").unique())
+    for i, card in enumerate(cards):
+        sub = gaps[gaps["card_date"].dt.strftime("%Y-%m-%d") == card]
+        color = STRATEGY_COLORS[i % len(STRATEGY_COLORS)]
+        heavy = sub[sub["is_heavy_favorite"]]
+        light = sub[~sub["is_heavy_favorite"]]
+        ax.plot(light["consensus_fav_devig"], light["gap_ask_cents"], "o",
+                ms=6, color=color, alpha=0.45, markeredgecolor=SURFACE,
+                markeredgewidth=1.0, zorder=3)
+        ax.plot(heavy["consensus_fav_devig"], heavy["gap_ask_cents"], "o",
+                ms=10, color=color, markeredgecolor=INK_2, markeredgewidth=1.3,
+                zorder=4, label=f"card {card} (large = heavy favorite)")
+
+    ax.set_xlabel("De-vigged consensus probability of the favorite")
+    ax.set_ylabel("Kalshi ask − de-vigged consensus (cents/contract)")
+    ax.set_title("Pilot field check: exchange asks sit cents above the consensus")
+    ax.grid(True, axis="y", zorder=0)
+    ax.grid(False, axis="x")
+    _despine(ax)
+    ax.legend(loc="lower left", fontsize=9)
+    _fig_caption(
+        fig,
+        "Each point is one fight's favorite. Snapshots taken several days before each card "
+        "(the historical study concerns closing lines); consensus approximated from a multi-book "
+        "best/worst range. Two cards are an illustration, not an estimate — see data/live_quotes.csv.",
+        y=-0.05,
     )
     fig.savefig(path)
     plt.close(fig)

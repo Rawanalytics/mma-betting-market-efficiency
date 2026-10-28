@@ -4,7 +4,9 @@
 Usage:  python run_analysis.py [--data data/ufc-master.csv]
 
 Downloads the dataset if needed, runs every test, writes tables to results/,
-figures to figures/, and prints a summary.
+figures to figures/, and prints a summary. Every stage is deterministic
+(fixed bootstrap seeds), so a clean checkout regenerates the committed
+results byte for byte.
 """
 
 from __future__ import annotations
@@ -20,8 +22,10 @@ sys.path.insert(0, str(ROOT / "src"))
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from mma_efficiency import calibration, costs, data, exploit, models, plots, returns  # noqa: E402
+from mma_efficiency import calibration, costs, data, exploit, field, models, plots, returns  # noqa: E402
 
+# Era boundaries for the stability check: three spans of similar size that
+# track the sport's growth from niche to mainstream.
 ERAS = [
     ("2010–2015", "2010-01-01", "2016-01-01"),
     ("2016–2020", "2016-01-01", "2021-01-01"),
@@ -30,6 +34,10 @@ ERAS = [
 
 
 def main() -> None:
+    """Execute all nine stages: data prep, calibration tests, returns by
+    band, strategy backtests, the walk-forward exploitability test, Kalshi
+    fee scenarios, the live-quote field check, the ML benchmark, and the
+    publication figures."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(ROOT / "data" / "ufc-master.csv"))
     ap.add_argument("--split-date", default="2022-01-01",
@@ -42,7 +50,7 @@ def main() -> None:
     figures_dir.mkdir(exist_ok=True)
 
     # ------------------------------------------------------------------ data
-    print("[1/8] Loading data ...")
+    print("[1/9] Loading data ...")
     raw = data.load_raw(args.data)
     fights = data.build_fight_table(raw)
     sides = data.side_table(fights)
@@ -61,7 +69,7 @@ def main() -> None:
     }
 
     # --------------------------------------------------------- calibration
-    print("[2/8] Calibration tests ...")
+    print("[2/9] Calibration tests ...")
     cal_tab = calibration.bucket_binomial_tests(sides, "p_basic")
     cal_tab.to_csv(results_dir / "calibration_buckets.csv", index=False)
     # Robustness view: quantile bins with ~500 bets each, grouped by nearest
@@ -91,7 +99,7 @@ def main() -> None:
     ]
 
     # -------------------------------------------------------------- returns
-    print("[3/8] Returns by odds band ...")
+    print("[3/9] Returns by odds band ...")
     band_tab = returns.returns_by_band(sides)
     band_tab.to_csv(results_dir / "returns_by_band.csv", index=False)
     trend = returns.returns_trend_test(sides)
@@ -100,7 +108,7 @@ def main() -> None:
           f"(t = {trend['t_stat']:.2f}, p = {trend['p_value']:.2g})")
 
     # ------------------------------------------------------------- backtest
-    print("[4/8] Strategy backtests ...")
+    print("[4/9] Strategy backtests ...")
     bt = returns.backtest_rules(sides)
     bt.to_csv(results_dir / "backtest_strategies.csv", index=False)
     pnl_rules = {
@@ -112,7 +120,7 @@ def main() -> None:
     pnl = returns.cumulative_pnl(sides, pnl_rules)
 
     # ------------------------------------------------------- exploitability
-    print("[5/8] Exploitability: walk-forward test of a pre-registered rule ...")
+    print("[5/9] Exploitability: walk-forward test of a pre-registered rule ...")
     sweep_fav = exploit.threshold_sweep(sides)
     sweep_dog = exploit.threshold_sweep(sides, cutoffs=exploit.UNDERDOG_CUTOFFS)
     pd.concat([sweep_fav, sweep_dog]).to_csv(results_dir / "threshold_sweep.csv", index=False)
@@ -124,7 +132,7 @@ def main() -> None:
           f"p(ROI>0) one-sided = {wf['test_p_roi_gt0']:.3f})")
 
     # ------------------------------------------------ prediction-market costs
-    print("[6/8] Prediction-market execution: Kalshi fee scenarios ...")
+    print("[6/9] Prediction-market execution: Kalshi fee scenarios ...")
     split = pd.Timestamp(wf["train_end"])
     wf_bets = sides[(sides["date"] >= split) & (sides["odds"] <= wf["chosen_cutoff"])]
     fee_tab = costs.fee_scenario_table(wf_bets, seed=17)
@@ -153,8 +161,30 @@ def main() -> None:
           f"mid+2c {k.loc['kalshi_spread2_taker','roi']:+.2%} "
           f"(p = {k.loc['kalshi_spread2_taker','p_roi_gt0']:.3f})")
 
+    # ----------------------------------------------------- field evidence
+    # The fee scenarios above rest on assumptions about the prices the
+    # exchange actually offers. This stage scores those assumptions against
+    # the live Kalshi-vs-books snapshots collected in data/live_quotes.csv.
+    # It is skipped gracefully if the snapshot file is absent (e.g. a user
+    # who deleted it to run the purely historical study).
+    quotes_path = ROOT / "data" / "live_quotes.csv"
+    if quotes_path.exists():
+        print("[7/9] Field evidence: live Kalshi quotes vs de-vigged consensus ...")
+        gaps = field.quote_gap_table(field.load_quotes(quotes_path))
+        gaps.to_csv(results_dir / "field_quote_gaps.csv", index=False)
+        fs = field.summarize_gaps(gaps)
+        summary["field_evidence"] = fs
+        print(f"      {fs['n_fights']} fights on {fs['n_cards']} cards; "
+              f"heavy favorites (n = {fs['n_heavy_favorites']}): "
+              f"ask sits {fs['mean_gap_ask_cents_heavy']:+.1f}c above the "
+              f"de-vigged consensus (mid {fs['mean_gap_mid_cents_heavy']:+.1f}c); "
+              f"mean spread {fs['mean_spread_cents']:.1f}c")
+    else:
+        print("[7/9] Field evidence: data/live_quotes.csv not found, skipping.")
+        gaps = None
+
     # ------------------------------------------------------------------- ML
-    print("[7/8] ML benchmark (public stats vs the closing line) ...")
+    print("[8/9] ML benchmark (public stats vs the closing line) ...")
     model_table = models.build_model_table(raw, fights)
     ml_res, ml_extra = models.run_benchmark(model_table, split_date=args.split_date)
     ml_res.to_csv(results_dir / "ml_benchmark.csv", index=False)
@@ -168,7 +198,7 @@ def main() -> None:
     summary["ml_benchmark"] = ml_res.drop(columns=["p_model_better"]).to_dict("records")
 
     # -------------------------------------------------------------- figures
-    print("[8/8] Figures ...")
+    print("[9/9] Figures ...")
     plots.plot_calibration(cal_tab, figures_dir / "calibration.png")
     plots.plot_calibration(
         cal_eq, figures_dir / "calibration_equal_count.png",
@@ -182,6 +212,8 @@ def main() -> None:
     plots.plot_slope_stability(summary["era_slopes"], figures_dir / "slope_stability.png")
     plots.plot_threshold_sweep(sweep_fav, wf, figures_dir / "exploitability.png")
     plots.plot_fee_scenarios(fee_tab, figures_dir / "fees_scenarios.png")
+    if gaps is not None:
+        plots.plot_field_gaps(gaps, figures_dir / "field_gaps.png")
     plots.plot_ml_benchmark(ml_res, figures_dir / "ml_benchmark.png")
 
     with open(results_dir / "summary.json", "w") as fh:
@@ -189,6 +221,7 @@ def main() -> None:
 
     # ------------------------------------------------------------- headline
     def wavg(sub: pd.DataFrame, col: str) -> float:
+        """Bet-count-weighted average of a returns_by_band column."""
         return float((sub[col] * sub["n_bets"]).sum() / sub["n_bets"].sum())
 
     hu = band_tab[band_tab["band"].isin(["+300 to +499", "+500 or longer"])]
@@ -201,6 +234,10 @@ def main() -> None:
           f"(vig-only benchmark {band_tab['vig_null_return'].mean():+.1%})")
     print(f"Exploitable edge, out of sample: {wf['test_roi']:+.1%} "
           f"(beats the vig, not significantly > 0: p = {wf['test_p_roi_gt0']:.2f})")
+    if gaps is not None:
+        fs = summary["field_evidence"]
+        print(f"Field check: Kalshi heavy-favorite asks {fs['mean_gap_ask_cents_heavy']:+.1f}c "
+              f"vs de-vigged consensus over {fs['n_cards']} pilot cards")
     print("Results in results/, figures in figures/.")
 
 
