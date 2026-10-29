@@ -30,7 +30,7 @@ the tails. Longshots win less often than their price implies, and heavy favorite
 | Can public fighter stats beat the closing line? (2022–2026 out-of-sample) | **No** — best model improves log-loss by a statistically indistinguishable −0.003 |
 | Walk-forward test of a pre-registered rule (picked on 2010–2017, bet 2018–2026) | favorites ≤ −300: **+1.9%** per bet [−1.2, +4.7] on 975 bets — beats the vig, but p(ROI > 0) = 0.11 |
 | Same out-of-sample bets executed on Kalshi (official fee schedule), if the exchange mid tracks the de-vigged consensus | **+4.5%** per bet [+1.4, +7.4], p < 0.001; still +3.3% (p = 0.01) crossing a 1¢ half-spread — but +0.6% (p = 0.35) if the exchange price embeds the book's margin |
-| Field check: live Kalshi UFC quotes vs the de-vigged multi-book consensus (2 pilot cards, 24 fights) | heavy-favorite asks sit **+2.2¢** above the consensus (spreads ~1¢, asks sum to ~1.00–1.01) — the "mid + 2¢" regime: partial correction, thin taker edge |
+| Field check: Kalshi UFC quotes vs the de-vigged multi-book consensus (4 pilot cards, 49 fights, two horizons) | heavy-favorite asks sit **+2.2¢** above the consensus midweek but **+0.9¢** at close (spreads ~1¢, asks sum to ~1.00–1.01) — closing-time taker execution lands between the "mid" and "mid + 1¢" regimes |
 
 A bookmaker margin of ~4.8% cannot explain a 30-cents-per-dollar loss on heavy underdogs. That is
 probability mispricing, not friction.
@@ -79,18 +79,21 @@ at those prices is untested here.
 ![Fee scenarios](figures/fees_scenarios.png)
 
 **Which scenario is real? First field evidence.** Since Kalshi now lists every UFC bout, the
-price-formation question is directly observable. I began collecting paired snapshots in August
-2026: Kalshi's live bid/ask for every fight on an upcoming card next to the multi-book moneyline
-range at the same moment (`data/live_quotes.csv`, analyzed by `src/mma_efficiency/field.py`).
-Across the first two cards (24 fights, 8 with a consensus favorite at −300 or shorter): spreads
-average ~1.2¢ and the two asks sum to ~1.00–1.01 — the vig really is gone — but heavy-favorite
-asks sit **+2.2¢ above the de-vigged consensus** on average (+1.6¢ at the mid). That lands in the
-"mid + 2¢" row of the scenario table: exchange participants appear to correct *part* of the
-favorite underpricing, leaving a taker in the thin +2%-per-bet regime rather than the decisive
-+4.5% one. Resting orders one tick inside the spread would execute near the consensus itself,
-with fill risk this data can't measure. Two mid-week cards are a pilot, not an estimate — the
-target design (snapshots near close, 20–30 cards) pins the mean gap to ~±0.5¢, and each new card
-is one CSV row away from inclusion.
+price-formation question is directly observable — at two horizons (`data/live_quotes.csv`,
+analyzed by `src/mma_efficiency/field.py`). *Midweek*, live snapshots pair Kalshi's bid/ask for
+every fight on an upcoming card with the multi-book moneyline range at the same moment (2 cards,
+24 fights). *At close*, the comparison is reconstructed for completed cards from Kalshi's public
+candlestick history — the last pre-fight hourly candle — against the books' closing ranges
+(2 cards, 25 fights). Everywhere the microstructure is as cheap as assumed: spreads average ~1¢
+and the two asks sum to ~1.00–1.01, so the vig really is gone. But the taker's premium over the
+de-vigged consensus depends on when you look: heavy-favorite asks sit **+2.2¢ above the consensus
+midweek and +0.9¢ at close** (+1.6¢ and +0.4¢ at the mid). Closing-time execution — the horizon
+the historical edge is defined on — therefore lands between the "taker at the mid" (+4.5%/bet)
+and "mid + 1¢" (+3.3%/bet) rows of the scenario table, not the thin +2.1% regime the midweek gap
+alone suggested. The caveat cuts both ways: the two horizons cover different cards, so the
+compression is a cross-card contrast, not a tracked price path. Four cards are a pilot, not an
+estimate — the target design (closing reconstruction over 20–30 cards) pins the mean gap to
+~±0.5¢, and each new card is a few CSV rows away from inclusion.
 
 ![Field gaps](figures/field_gaps.png)
 
@@ -153,13 +156,13 @@ against raw (vig-included) prices.
 │   ├── returns.py           # returns by band, cluster bootstrap, strategy backtests
 │   ├── exploit.py           # threshold sweep + walk-forward out-of-sample rule test
 │   ├── costs.py             # Kalshi fee model + execution-scenario backtests
-│   ├── field.py             # live Kalshi quotes vs de-vigged consensus (ongoing collection)
+│   ├── field.py             # Kalshi quotes vs de-vigged consensus, midweek + close (ongoing)
 │   ├── models.py            # ML benchmark vs the closing line
 │   └── plots.py             # publication figures
-├── data/live_quotes.csv     # hand-collected exchange/book snapshots, one row per fight
+├── data/live_quotes.csv     # exchange/book quote pairs, one row per fight (horizon-flagged)
 ├── notebooks/analysis.ipynb # the full narrative analysis, executed
 ├── reports/                 # the research article (PDF + LaTeX source)
-├── tests/                   # 32 unit tests (pytest)
+├── tests/                   # 33 unit tests (pytest)
 ├── figures/                 # generated PNGs (committed)
 └── results/                 # generated tables: CSVs + summary.json (committed)
 ```
@@ -191,9 +194,9 @@ bias in mixed martial arts betting markets*, Journal of Economics and Finance.
 This is a statistical study of historical closing lines. It ignores bet limits, line movement
 and availability, and it is **not** betting advice. The sportsbook results are net of the vig but
 gross of everything else; the Kalshi scenarios apply the official fee schedule to a price
-assumption that the two pilot cards of live quotes only begin to test — mid-week snapshots on two
-cards are an illustration, not an estimate. The robust finding is the asymmetry, not a money
-machine.
+assumption that four pilot cards of quotes (two live midweek, two reconstructed at close) only
+begin to test — an illustration, not an estimate. The robust finding is the asymmetry, not a
+money machine.
 
 ## License
 

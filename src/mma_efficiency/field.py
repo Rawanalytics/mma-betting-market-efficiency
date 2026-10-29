@@ -22,18 +22,33 @@ Data format (``data/live_quotes.csv``), one row per fight:
 
     snapshot_date, card_date, event, favorite, underdog,
     kalshi_fav_bid/ask, kalshi_dog_bid/ask,
-    book_fav_best/worst, book_dog_best/worst   (American odds)
+    book_fav_best/worst, book_dog_best/worst,   (American odds)
+    horizon                                     ("midweek" or "close")
+
+Two collection horizons, flagged by the ``horizon`` column:
+
+* ``midweek`` rows are live snapshots taken by hand several days before the
+  card: Kalshi's displayed order book vs. the aggregator's current
+  best/worst book prices, read at the same time.
+* ``close`` rows are reconstructed closing quotes: the Kalshi side is the
+  last pre-fight hourly candle (1-2 hours before the recorded market close,
+  from the exchange's public candlestick history), and the book side is the
+  aggregator's closing range for each fighter. On a binary exchange the two
+  sides share one order book (a bid on one side *is* an ask on the other),
+  so the underdog columns of ``close`` rows are the exact complement of the
+  favorite's book, which avoids pairing quotes read minutes apart.
 
 Honest limitations, stated once here and repeated in the paper:
 
-* Snapshots so far are taken mid-week, several days before each card, while
-  the historical study is about *closing* lines; lines move toward close.
 * The book consensus is approximated from the best/worst price range shown
   by a multi-book aggregator (midpoint in probability space), not from the
   full list of quotes.
-* Two cards is a pilot, not a sample. The target is 20-30 cards, captured
-  near close, before treating the mean gap as an estimate rather than an
-  illustration.
+* The "closing" exchange quote is the last hourly candle before the fight,
+  not the final tick, and the book closing range aggregates books that stop
+  updating at slightly different times.
+* Four cards across two horizons is a pilot, not a sample. The target is
+  20-30 cards per horizon before treating the mean gap as an estimate
+  rather than an illustration.
 """
 
 from __future__ import annotations
@@ -71,6 +86,13 @@ def load_quotes(path: str | Path = "data/live_quotes.csv") -> pd.DataFrame:
     prices = df[["kalshi_fav_bid", "kalshi_fav_ask", "kalshi_dog_bid", "kalshi_dog_ask"]]
     if ((prices <= 0) | (prices >= 1)).any().any():
         raise ValueError("Kalshi prices must lie strictly inside (0, 1) dollars")
+    # Horizon flag: early snapshot files predate the column, so default to
+    # the midweek label they were collected under.
+    if "horizon" not in df.columns:
+        df["horizon"] = "midweek"
+    bad = set(df["horizon"].unique()) - {"midweek", "close"}
+    if bad:
+        raise ValueError(f"unknown horizon labels: {bad}")
     return df
 
 
@@ -124,9 +146,15 @@ def quote_gap_table(quotes: pd.DataFrame) -> pd.DataFrame:
 
 def summarize_gaps(gaps: pd.DataFrame) -> dict:
     """Headline numbers for the paper: mean gaps overall and for the
-    heavy-favorite subset the strategy would actually trade."""
+    heavy-favorite subset the strategy would actually trade.
+
+    When the table carries a ``horizon`` column the same statistics are also
+    reported per horizon under ``by_horizon``, since the economically
+    relevant comparison (what does a taker pay *at close*, when the
+    historical edge is defined?) should not be diluted by midweek rows.
+    """
     heavy = gaps[gaps["is_heavy_favorite"]]
-    return {
+    out = {
         "n_fights": int(len(gaps)),
         "n_cards": int(gaps["card_date"].nunique()),
         "n_heavy_favorites": int(len(heavy)),
@@ -137,3 +165,9 @@ def summarize_gaps(gaps: pd.DataFrame) -> dict:
         "mean_spread_cents": float(gaps["kalshi_spread_cents"].mean()),
         "mean_booksum": float(gaps["consensus_booksum"].mean()),
     }
+    if "horizon" in gaps.columns and gaps["horizon"].nunique() > 1:
+        out["by_horizon"] = {
+            h: summarize_gaps(sub.drop(columns=["horizon"]))
+            for h, sub in gaps.groupby("horizon", sort=True)
+        }
+    return out

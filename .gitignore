@@ -17,3 +17,8 @@ build/
 _to_delete/
 reports/research_walkthrough.md
 reports/publishing_notes.md
+
+# LaTeX build artifacts
+reports/*.aux
+reports/*.log
+reports/*.out

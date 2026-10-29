@@ -1,25 +1,50 @@
-snapshot_date,card_date,event,favorite,underdog,kalshi_fav_bid,kalshi_fav_ask,kalshi_dog_bid,kalshi_dog_ask,book_fav_best,book_fav_worst,book_dog_best,book_dog_worst
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Umar Nurmagomedov,Yadong Song,0.81,0.82,0.18,0.19,-459,-550,400,372
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Rei Tsuruya,Kevin Borjas,0.84,0.85,0.15,0.16,-566,-715,489,400
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Bilal Hasan,Nilson Rojas,0.84,0.85,0.15,0.16,-500,-700,500,350
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Kai Asakura,Qileng Aori,0.79,0.80,0.20,0.21,-400,-480,335,300
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Julia Polastri,Xiong Jingnan,0.68,0.69,0.31,0.32,-225,-240,200,163
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Lawrence Lui,Hector Santiago,0.73,0.74,0.26,0.27,-291,-333,260,230
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Su Mudaerji,Alex Perez,0.66,0.67,0.33,0.34,-219,-235,181,175
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Andre Lima,Namsrai Batbayar,0.68,0.70,0.30,0.31,-225,-265,207,175
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Sean Woodson,Jack Jenkins,0.58,0.59,0.41,0.42,-150,-164,128,120
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Xiao Long,Francesco Nuzzi,0.61,0.62,0.37,0.39,-175,-196,152,145
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Yan Xiaonan,Denise Gomes,0.60,0.61,0.40,0.41,-160,-175,138,130
-2026-08-24,2026-08-29,UFC Fight Night Shanghai,Ding Meng,Cameron Nelson,0.56,0.57,0.42,0.43,-120,-132,107,100
-2026-10-28,2026-11-01,UFC Vegas 123,Lucia Szabova,Tainara Lisboa,0.83,0.85,0.15,0.16,-614,-715,567,400
-2026-10-28,2026-11-01,UFC Vegas 123,Joseph Kropschot,Nick Klein,0.74,0.75,0.24,0.25,-317,-341,300,240
-2026-10-28,2026-11-01,UFC Vegas 123,Zach Reese,Mickey Gall,0.74,0.75,0.25,0.26,-295,-360,285,220
-2026-10-28,2026-11-01,UFC Vegas 123,Jean-Paul Lebosnoyani,Farman Hasanov,0.72,0.73,0.27,0.28,-270,-315,257,210
-2026-10-28,2026-11-01,UFC Vegas 123,Piera Rodriguez,Talita Alencar,0.71,0.72,0.28,0.29,-270,-305,257,215
-2026-10-28,2026-11-01,UFC Vegas 123,Jacobe Smith,Randy Brown,0.70,0.72,0.28,0.29,-257,-278,245,200
-2026-10-28,2026-11-01,UFC Vegas 123,Luana Santos,Yana Santos,0.72,0.73,0.27,0.29,-257,-286,245,207
-2026-10-28,2026-11-01,UFC Vegas 123,Francis Marshall,Dakota Hope,0.66,0.67,0.31,0.34,-203,-260,200,181
-2026-10-28,2026-11-01,UFC Vegas 123,Jeongyeong Lee,Julian Erosa,0.60,0.61,0.38,0.39,-165,-188,163,138
-2026-10-28,2026-11-01,UFC Vegas 123,Rodrigo Sezinando,Theodor Berggren,0.60,0.61,0.39,0.40,-150,-180,150,138
-2026-10-28,2026-11-01,UFC Vegas 123,Renato Moicano,Tom Nolan,0.53,0.54,0.46,0.47,-108,-141,114,-104
-2026-10-28,2026-11-01,UFC Vegas 123,Cody Durden,Ode Osbourne,0.50,0.52,0.49,0.50,-108,-121,104,-113
+snapshot_date,card_date,event,favorite,underdog,kalshi_fav_bid,kalshi_fav_ask,kalshi_dog_bid,kalshi_dog_ask,book_fav_best,book_fav_worst,book_dog_best,book_dog_worst,horizon
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Umar Nurmagomedov,Yadong Song,0.81,0.82,0.18,0.19,-459,-550,400,372,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Rei Tsuruya,Kevin Borjas,0.84,0.85,0.15,0.16,-566,-715,489,400,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Bilal Hasan,Nilson Rojas,0.84,0.85,0.15,0.16,-500,-700,500,350,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Kai Asakura,Qileng Aori,0.79,0.80,0.20,0.21,-400,-480,335,300,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Julia Polastri,Xiong Jingnan,0.68,0.69,0.31,0.32,-225,-240,200,163,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Lawrence Lui,Hector Santiago,0.73,0.74,0.26,0.27,-291,-333,260,230,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Su Mudaerji,Alex Perez,0.66,0.67,0.33,0.34,-219,-235,181,175,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Andre Lima,Namsrai Batbayar,0.68,0.70,0.30,0.31,-225,-265,207,175,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Sean Woodson,Jack Jenkins,0.58,0.59,0.41,0.42,-150,-164,128,120,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Xiao Long,Francesco Nuzzi,0.61,0.62,0.37,0.39,-175,-196,152,145,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Yan Xiaonan,Denise Gomes,0.60,0.61,0.40,0.41,-160,-175,138,130,midweek
+2026-08-24,2026-08-29,UFC Fight Night Shanghai,Ding Meng,Cameron Nelson,0.56,0.57,0.42,0.43,-120,-132,107,100,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Lucia Szabova,Tainara Lisboa,0.83,0.85,0.15,0.16,-614,-715,567,400,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Joseph Kropschot,Nick Klein,0.74,0.75,0.24,0.25,-317,-341,300,240,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Zach Reese,Mickey Gall,0.74,0.75,0.25,0.26,-295,-360,285,220,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Jean-Paul Lebosnoyani,Farman Hasanov,0.72,0.73,0.27,0.28,-270,-315,257,210,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Piera Rodriguez,Talita Alencar,0.71,0.72,0.28,0.29,-270,-305,257,215,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Jacobe Smith,Randy Brown,0.70,0.72,0.28,0.29,-257,-278,245,200,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Luana Santos,Yana Santos,0.72,0.73,0.27,0.29,-257,-286,245,207,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Francis Marshall,Dakota Hope,0.66,0.67,0.31,0.34,-203,-260,200,181,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Jeongyeong Lee,Julian Erosa,0.60,0.61,0.38,0.39,-165,-188,163,138,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Rodrigo Sezinando,Theodor Berggren,0.60,0.61,0.39,0.40,-150,-180,150,138,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Renato Moicano,Tom Nolan,0.53,0.54,0.46,0.47,-108,-141,114,-104,midweek
+2026-10-28,2026-11-01,UFC Vegas 123,Cody Durden,Ode Osbourne,0.50,0.52,0.49,0.50,-108,-121,104,-113,midweek
+2026-09-19,2026-09-19,UFC 331,Joshua Van,Alexandre Pantoja,0.58,0.59,0.41,0.42,-145,-164,138,122,close
+2026-09-19,2026-09-19,UFC 331,Arman Tsarukyan,Mauricio Ruffy,0.72,0.73,0.27,0.28,-275,-333,250,225,close
+2026-09-19,2026-09-19,UFC 331,Doo Ho Choi,Patricio Pitbull,0.69,0.70,0.30,0.31,-255,-300,240,205,close
+2026-09-19,2026-09-19,UFC 331,Gable Steveson,Sean Sharaf,0.90,0.91,0.09,0.10,-1350,-3335,1200,760,close
+2026-09-19,2026-09-19,UFC 331,Iwo Baraniewski,Alonzo Menifield,0.71,0.72,0.28,0.29,-250,-350,275,200,close
+2026-09-19,2026-09-19,UFC 331,Charles Jourdain,Marlon Vera,0.63,0.64,0.36,0.37,-185,-225,175,157,close
+2026-09-19,2026-09-19,UFC 331,Robelis Despaigne,Tai Tuivasa,0.78,0.79,0.21,0.22,-405,-480,350,320,close
+2026-09-19,2026-09-19,UFC 331,Joo Sang Yoo,Michael Aswell,0.61,0.62,0.38,0.39,-170,-186,150,140,close
+2026-09-19,2026-09-19,UFC 331,Ryan Gandra,Osman Diaz,0.81,0.82,0.18,0.19,-500,-770,500,350,close
+2026-09-19,2026-09-19,UFC 331,Edmen Shahbazyan,Brunno Ferreira,0.62,0.63,0.37,0.38,-175,-195,155,140,close
+2026-09-19,2026-09-19,UFC 331,Casey O'Neill,Eduarda Moura,0.67,0.68,0.32,0.33,-210,-250,205,175,close
+2026-09-19,2026-09-19,UFC 331,Joanderson Brito,Giga Chikadze,0.79,0.80,0.20,0.21,-400,-770,480,300,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Cristian Perez,Kyle Nelson,0.74,0.75,0.25,0.26,-340,-375,294,260,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Jhonata Diniz,Tanner Boser,0.65,0.66,0.34,0.35,-200,-230,184,163,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Nick Galanti,Julien Leblanc,0.85,0.86,0.14,0.15,-649,-1000,600,440,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Joel Faglier,Javad Mahjoub,0.54,0.55,0.45,0.46,-125,-137,114,100,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Katlyn Cerminara,Mackenzie Stiller,0.69,0.70,0.30,0.31,-250,-275,212,190,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Steven Koslow,Chad Anheliger,0.61,0.62,0.38,0.39,-163,-205,170,130,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Melissa Croden,Chelsea Chandler,0.75,0.76,0.24,0.25,-333,-430,330,250,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Cody Chovancek,Suyoung You,0.53,0.54,0.46,0.47,-120,-137,113,100,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Mike Malott,Joaquin Buckley,0.55,0.56,0.44,0.45,-129,-138,116,104,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Erin Blanchfield,Jasmine Jasudavicius,0.75,0.76,0.24,0.25,-315,-340,265,250,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Kyle Daukaus,Marc-Andre Barriault,0.64,0.65,0.35,0.36,-188,-210,170,150,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Louis Jourdain,Timmy Cuamba,0.59,0.60,0.40,0.41,-150,-180,143,128,close
+2026-10-17,2026-10-17,UFC Fight Night Edmonton,Mandel Nallo,Nate Landwehr,0.71,0.72,0.28,0.29,-275,-330,269,210,close

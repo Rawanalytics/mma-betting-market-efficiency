@@ -366,7 +366,8 @@ def plot_fee_scenarios(tab: pd.DataFrame, path: str) -> None:
 
 def plot_field_gaps(gaps: pd.DataFrame, path: str) -> None:
     """Field check: where live Kalshi favorite prices sit relative to the
-    de-vigged sportsbook consensus, per fight, colored by card.
+    de-vigged sportsbook consensus, per fight, colored by card and shaped by
+    collection horizon (circles midweek, squares at close).
 
     The dashed reference lines mark the execution scenarios of the cost
     model: a gap of 0 is 'taker at the mid', 1 and 2 cents are the spread
@@ -385,31 +386,39 @@ def plot_field_gaps(gaps: pd.DataFrame, path: str) -> None:
         ax.text(0.99, yref + 0.06, lab, transform=ax.get_yaxis_transform(),
                 fontsize=8.2, color=MUTED, va="bottom", ha="right")
 
+    horizon = gaps["horizon"] if "horizon" in gaps.columns else pd.Series(
+        "midweek", index=gaps.index
+    )
+    markers = {"midweek": "o", "close": "s"}
     cards = sorted(gaps["card_date"].dt.strftime("%Y-%m-%d").unique())
     for i, card in enumerate(cards):
-        sub = gaps[gaps["card_date"].dt.strftime("%Y-%m-%d") == card]
+        on_card = gaps["card_date"].dt.strftime("%Y-%m-%d") == card
+        sub = gaps[on_card]
+        mark = markers.get(horizon[on_card].iloc[0], "o")
         color = STRATEGY_COLORS[i % len(STRATEGY_COLORS)]
         heavy = sub[sub["is_heavy_favorite"]]
         light = sub[~sub["is_heavy_favorite"]]
-        ax.plot(light["consensus_fav_devig"], light["gap_ask_cents"], "o",
+        ax.plot(light["consensus_fav_devig"], light["gap_ask_cents"], mark,
                 ms=6, color=color, alpha=0.45, markeredgecolor=SURFACE,
                 markeredgewidth=1.0, zorder=3)
-        ax.plot(heavy["consensus_fav_devig"], heavy["gap_ask_cents"], "o",
+        ax.plot(heavy["consensus_fav_devig"], heavy["gap_ask_cents"], mark,
                 ms=10, color=color, markeredgecolor=INK_2, markeredgewidth=1.3,
-                zorder=4, label=f"card {card} (large = heavy favorite)")
+                zorder=4,
+                label=f"{card} · {horizon[on_card].iloc[0]} (large = heavy favorite)")
 
     ax.set_xlabel("De-vigged consensus probability of the favorite")
     ax.set_ylabel("Kalshi ask − de-vigged consensus (cents/contract)")
-    ax.set_title("Pilot field check: exchange asks sit cents above the consensus")
+    ax.set_title("Field check: the exchange's premium over the consensus shrinks by close")
     ax.grid(True, axis="y", zorder=0)
     ax.grid(False, axis="x")
     _despine(ax)
-    ax.legend(loc="lower left", fontsize=9)
+    ax.legend(loc="lower left", fontsize=8.4)
     _fig_caption(
         fig,
-        "Each point is one fight's favorite. Snapshots taken several days before each card "
-        "(the historical study concerns closing lines); consensus approximated from a multi-book "
-        "best/worst range. Two cards are an illustration, not an estimate — see data/live_quotes.csv.",
+        "Each point is one fight's favorite. Circles: live midweek snapshots, several days out. "
+        "Squares: reconstructed closing quotes (last pre-fight hourly candle vs the books' closing "
+        "range). Consensus approximated from a multi-book best/worst range. Four cards are an "
+        "illustration, not an estimate — see data/live_quotes.csv.",
         y=-0.05,
     )
     fig.savefig(path)

@@ -213,15 +213,39 @@
     }
   },
   "field_evidence": {
-    "n_fights": 24,
-    "n_cards": 2,
-    "n_heavy_favorites": 8,
-    "mean_gap_ask_cents_all": 1.6964276448606175,
-    "mean_gap_mid_cents_all": 1.1130943115272842,
-    "mean_gap_ask_cents_heavy": 2.20955250374469,
-    "mean_gap_mid_cents_heavy": 1.6470525037446893,
-    "mean_spread_cents": 1.1666666666666659,
-    "mean_booksum": 1.0459620405787737
+    "n_fights": 49,
+    "n_cards": 4,
+    "n_heavy_favorites": 18,
+    "mean_gap_ask_cents_all": 1.2696241634026784,
+    "mean_gap_mid_cents_all": 0.7288078368720661,
+    "mean_gap_ask_cents_heavy": 1.4731894831844023,
+    "mean_gap_mid_cents_heavy": 0.9454117054066242,
+    "mean_spread_cents": 1.0816326530612241,
+    "mean_booksum": 1.0471387797278935,
+    "by_horizon": {
+      "close": {
+        "n_fights": 25,
+        "n_cards": 2,
+        "n_heavy_favorites": 10,
+        "mean_gap_ask_cents_all": 0.859892821203057,
+        "mean_gap_mid_cents_all": 0.3598928212030566,
+        "mean_gap_ask_cents_heavy": 0.8840990667361727,
+        "mean_gap_mid_cents_heavy": 0.3840990667361721,
+        "mean_spread_cents": 1.0000000000000004,
+        "mean_booksum": 1.0482684493110483
+      },
+      "midweek": {
+        "n_fights": 24,
+        "n_cards": 2,
+        "n_heavy_favorites": 8,
+        "mean_gap_ask_cents_all": 1.6964276448606175,
+        "mean_gap_mid_cents_all": 1.1130943115272842,
+        "mean_gap_ask_cents_heavy": 2.20955250374469,
+        "mean_gap_mid_cents_heavy": 1.6470525037446893,
+        "mean_spread_cents": 1.1666666666666659,
+        "mean_booksum": 1.0459620405787737
+      }
+    }
   },
   "ml_benchmark": [
     {

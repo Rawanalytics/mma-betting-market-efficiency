@@ -91,16 +91,40 @@ def test_summary_counts_and_means():
     assert s["mean_gap_mid_cents_all"] == pytest.approx(1.5, abs=1e-9)
     # with best == worst the consensus booksum is the true overround
     assert s["mean_booksum"] > 1.0
+    # single implicit horizon -> no per-horizon breakdown
+    assert "by_horizon" not in s
+
+
+def test_summary_splits_by_horizon():
+    """Mixed-horizon tables get a per-horizon breakdown whose counts add up
+    and whose means recover each horizon's planted gap."""
+    mid = quote_gap_table(make_quotes(gap_cents=2.0)).assign(horizon="midweek")
+    clo = quote_gap_table(make_quotes(gap_cents=0.5)).assign(horizon="close")
+    s = summarize_gaps(pd.concat([mid, clo], ignore_index=True))
+    assert set(s["by_horizon"]) == {"midweek", "close"}
+    bh = s["by_horizon"]
+    assert bh["midweek"]["n_fights"] + bh["close"]["n_fights"] == s["n_fights"]
+    assert bh["midweek"]["mean_gap_mid_cents_all"] == pytest.approx(2.0, abs=1e-9)
+    assert bh["close"]["mean_gap_mid_cents_all"] == pytest.approx(0.5, abs=1e-9)
 
 
 def test_load_quotes_validates_real_file():
     """The committed snapshot file loads, passes validation, and contains
-    both pilot cards with at least a few strategy-relevant favorites."""
+    the pilot (midweek) cards plus the reconstructed closing cards, with a
+    meaningful number of strategy-relevant favorites in each horizon."""
     quotes = load_quotes(REPO_ROOT / "data" / "live_quotes.csv")
     gaps = quote_gap_table(quotes)
     s = summarize_gaps(gaps)
-    assert s["n_cards"] >= 2
-    assert s["n_heavy_favorites"] >= 4
-    # pilot reading: exchange asks sit above the de-vigged consensus, but by
-    # cents, not by the full vig share
-    assert 0.0 < s["mean_gap_ask_cents_heavy"] < 4.0
+    assert s["n_cards"] >= 4
+    assert s["n_heavy_favorites"] >= 12
+    bh = s["by_horizon"]
+    # reading in both horizons: exchange asks sit above the de-vigged
+    # consensus, but by cents, not by the full vig share...
+    assert 0.0 < bh["midweek"]["mean_gap_ask_cents_heavy"] < 4.0
+    assert 0.0 < bh["close"]["mean_gap_ask_cents_heavy"] < 4.0
+    # ...and the premium compresses toward close, which is the horizon the
+    # historical edge is defined on
+    assert (
+        bh["close"]["mean_gap_ask_cents_heavy"]
+        < bh["midweek"]["mean_gap_ask_cents_heavy"]
+    )

@@ -179,6 +179,12 @@ def main() -> None:
               f"ask sits {fs['mean_gap_ask_cents_heavy']:+.1f}c above the "
               f"de-vigged consensus (mid {fs['mean_gap_mid_cents_heavy']:+.1f}c); "
               f"mean spread {fs['mean_spread_cents']:.1f}c")
+        for h, sub in fs.get("by_horizon", {}).items():
+            print(f"      [{h}] {sub['n_fights']} fights / {sub['n_cards']} cards: "
+                  f"heavy-favorite ask gap {sub['mean_gap_ask_cents_heavy']:+.2f}c "
+                  f"(mid {sub['mean_gap_mid_cents_heavy']:+.2f}c), "
+                  f"spread {sub['mean_spread_cents']:.1f}c, "
+                  f"booksum {sub['mean_booksum']:.3f}")
     else:
         print("[7/9] Field evidence: data/live_quotes.csv not found, skipping.")
         gaps = None
@@ -236,8 +242,15 @@ def main() -> None:
           f"(beats the vig, not significantly > 0: p = {wf['test_p_roi_gt0']:.2f})")
     if gaps is not None:
         fs = summary["field_evidence"]
-        print(f"Field check: Kalshi heavy-favorite asks {fs['mean_gap_ask_cents_heavy']:+.1f}c "
-              f"vs de-vigged consensus over {fs['n_cards']} pilot cards")
+        bh = fs.get("by_horizon", {})
+        if {"midweek", "close"} <= set(bh):
+            print(f"Field check: Kalshi heavy-favorite asks sit "
+                  f"{bh['midweek']['mean_gap_ask_cents_heavy']:+.1f}c over the de-vigged "
+                  f"consensus midweek but {bh['close']['mean_gap_ask_cents_heavy']:+.1f}c "
+                  f"at close ({fs['n_cards']} pilot cards)")
+        else:
+            print(f"Field check: Kalshi heavy-favorite asks {fs['mean_gap_ask_cents_heavy']:+.1f}c "
+                  f"vs de-vigged consensus over {fs['n_cards']} pilot cards")
     print("Results in results/, figures in figures/.")
 
 

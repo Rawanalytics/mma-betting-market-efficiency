@@ -45,10 +45,13 @@ a regulated prediction market using Kalshi's official fee schedule, where the ta
 heavy-favorite prices is only $0.7$--$1.8\%$ of stake ($1.5\%$ at the sample's mean price). If the exchange mid tracks the \devig{}
 sportsbook consensus, the same out-of-sample bets return $+4.5\%$ per bet ($p<0.001$), and remain
 profitable across a one-cent half-spread ($+3.3\%$, $p=0.01$); the edge dies only if exchange prices
-embed the bookmaker's margin ($+0.6\%$, $p=0.35$). A pilot field check of live Kalshi quotes on two
-2026 cards finds heavy-favorite asks about two cents above the \devig{} consensus --- partial
-correction, consistent with a thin rather than decisive taker edge. Explicit trading costs are
-therefore not the binding constraint on exploiting the anomaly --- price formation and liquidity are.
+embed the bookmaker's margin ($+0.6\%$, $p=0.35$). A field check on four 2026 cards (49 fights)
+locates real exchange prices between those poles, and finds the gap depends on \emph{when} one
+trades: midweek, heavy-favorite asks sit $+2.2$ cents above the \devig{} consensus, but
+reconstructed closing quotes show the premium compressing to $+0.9$ cents --- between the
+frictionless-mid and one-cent-spread scenarios, where the historical edge survives fees. Explicit
+trading costs are therefore not the binding constraint on exploiting the anomaly --- price
+formation and, above all, depth are.
 \end{abstract}
 
 \section{Introduction}
@@ -85,8 +88,9 @@ betting rule on an early era and evaluates it blind on a later one, avoiding the
 critique that applies to full-sample strategy returns. (iii) It asks --- to our knowledge for the
 first time in this literature --- whether the measured edge survives \emph{prediction-market}
 execution costs, using the exact fee schedule of Kalshi, the largest CFTC-regulated event-contract
-exchange, explicit assumptions about exchange price formation, and a first pilot of live exchange
-quotes collected against the multi-book consensus \citep{wolfers2004, kalshifees}.
+exchange, explicit assumptions about exchange price formation, and a first pilot of exchange
+quotes --- live midweek snapshots and reconstructed closing quotes --- collected against the
+multi-book consensus \citep{wolfers2004, kalshifees}.
 
 The answer to the exploitability question is sharp but conditional. At average sportsbook closing
 prices the edge on heavy favorites beats the vig but does not clear zero with statistical
@@ -119,10 +123,17 @@ errors by fight, bootstrap confidence intervals resample whole fights, and calib
 de-duplicate fights whose two sides land in the same bucket.
 
 A second, much smaller dataset supports the field check of Section~\ref{sec:field}: paired
-snapshots of Kalshi's live UFC order books and the contemporaneous multi-book sportsbook lines,
-collected card by card beginning August 2026 (two cards, 24 fights so far; one further bout was
-dropped because only a single book quoted it and the exchange spread was anomalous). It is
-archived in the repository as \texttt{data/live\_quotes.csv}.
+Kalshi-versus-books quotes collected card by card beginning August 2026, at two horizons flagged
+in the file. \emph{Midweek} rows are live snapshots of Kalshi's UFC order books and the
+contemporaneous multi-book sportsbook lines, taken several days before each card (two cards, 24
+fights; one further bout was dropped because only a single book quoted it and the exchange spread
+was anomalous). \emph{Close} rows reconstruct the same comparison at fight time for two completed
+cards (25 fights): the exchange side is the last pre-fight hourly candle from Kalshi's public
+candlestick history (one to two hours before the market closed), the book side is the
+aggregator's closing range for each fighter, and --- because a binary exchange's two sides share
+one order book --- the underdog quote is the exact complement of the favorite's, which avoids
+pairing prices read minutes apart. The combined file (49 fights on four cards) is archived in the
+repository as \texttt{data/live\_quotes.csv}.
 
 \section{Empirical framework}
 
@@ -498,42 +509,55 @@ plausible a priori; the next section brings the first direct observations to bea
 \label{sec:field}
 
 Which scenario row describes reality is an empirical question, and since Kalshi now lists every
-UFC bout, it can be answered by direct observation. I began collecting paired snapshots in August
-2026: for each fight on an upcoming card, Kalshi's best bid and ask from the public order book,
-and the contemporaneous moneyline range across seven sportsbooks from a multi-book aggregator.
-The consensus is approximated as the probability-space midpoint of each side's best and worst
-price, de-vigged proportionally; the statistic of interest is the favorite's ask minus the
-\devig{} consensus --- what a taker actually pays above the ``mid tracks consensus'' benchmark.
+UFC bout, it can be answered by direct observation. I collect the comparison at two horizons. For
+upcoming cards, live midweek snapshots pair Kalshi's best bid and ask from the public order book
+with the contemporaneous moneyline range across seven sportsbooks from a multi-book aggregator
+(two cards: August 29 and November 1, 2026; 24 fights). For completed cards, the same comparison
+is reconstructed \emph{at fight time}: Kalshi's public candlestick history preserves the order
+book's hourly bid and ask, so the exchange quote is the last pre-fight hourly candle (one to two
+hours before the recorded market close), paired with the aggregator's closing range for each
+fighter (two cards: UFC 331 on September 19 and the Edmonton card of October 17, 2026; 25
+fights). In both designs the consensus is approximated as the probability-space midpoint of each
+side's best and worst book price, de-vigged proportionally; the statistic of interest is the
+favorite's ask minus the \devig{} consensus --- what a taker actually pays above the ``mid tracks
+consensus'' benchmark.
 
-Two cards are in hand so far (August 29 and November 1, 2026; 24 fights, of which 8 had a
-consensus favorite at $-300$ or shorter). Three observations stand out
-(Figure~\ref{fig:field}; per-fight table in \texttt{results/field\_quote\_gaps.csv}). First, the
-exchange microstructure is as cheap as the fee analysis assumed: quoted spreads average 1.2
-cents, and the two sides' asks sum to roughly 1.00--1.01 --- there is essentially no vig in the
-prices. Second, favorite asks nonetheless sit \emph{above} the \devig{} consensus: $+2.2$ cents
-on average for the heavy favorites the strategy would trade ($+1.6$ cents at the mid), $+1.7$
-cents across all fights. Third, the gap is persistent across both cards rather than an artifact
-of one market. Mapped onto Table~\ref{tab:fees}, a two-cent taker gap corresponds to the
-$+2.1\%$-per-bet row ($p = 0.076$ historically): \emph{partial} correction of the favorite
-underpricing --- far from the book's four-cent margin, but also short of the frictionless mid.
-Resting bids one tick below the ask would execute near the consensus itself, between the maker
-and taker rows, with fill risk this data cannot measure.
+Three observations stand out (Figure~\ref{fig:field}; per-fight table in
+\texttt{results/field\_quote\_gaps.csv}). First, the exchange microstructure is as cheap as the
+fee analysis assumed, at both horizons: quoted spreads average 1.0--1.2 cents, and the two sides'
+asks sum to roughly 1.00--1.01 --- there is essentially no vig in the prices. Second, favorite
+asks sit \emph{above} the \devig{} consensus, but by how much depends on when one looks. Midweek,
+the heavy favorites the strategy would trade cost $+2.2$ cents over the consensus ($+1.6$ at the
+mid; 8 heavy favorites). At close --- the horizon on which the historical edge is actually
+defined --- the premium compresses to $+0.9$ cents at the ask and $+0.4$ at the mid (10 heavy
+favorites), and the compression holds across all fights as well ($+1.7$ midweek vs.\ $+0.9$ at
+close). Third, the pattern is consistent within horizon across cards rather than an artifact of
+one market. Mapped onto Table~\ref{tab:fees}, closing-time taker execution lands between the
+frictionless-mid row ($+4.5\%$ per bet historically, $p=0.001$) and the one-cent row ($+3.3\%$,
+$p=0.012$) --- a materially better regime than the midweek two-cent gap, which corresponds to the
+$+2.1\%$ row ($p = 0.076$). Read causally, early exchange prices leave favorites rich and
+converge toward the book consensus as money arrives before the fight; but the two horizons were
+measured on \emph{different} cards, so this is a cross-card contrast, not a within-card price
+path. Resting bids one tick below the ask would execute at or below the consensus itself, between
+the maker and taker rows, with fill risk this data cannot measure.
 
-These are pilot numbers, to be treated as an illustration rather than an estimate: two cards,
-snapshots taken days before close while the historical benchmark is the closing line, and a
-consensus proxied from a best/worst range rather than the full quote list. The collection design
-that would settle H5 --- snapshots at a fixed short horizon before each card's close, 20--30
-cards, roughly 50 heavy favorites --- pins the mean gap to within about half a cent and is
-underway; the repository's \texttt{field} module ingests each new card as a CSV row and
-regenerates this analysis.
+These are pilot numbers, to be treated as an illustration rather than an estimate: two cards per
+horizon, a consensus proxied from a best/worst range rather than the full quote list, and closing
+quotes taken from the last hourly candle rather than the final tick (book closing ranges likewise
+aggregate books that stop updating at slightly different times). The collection design that would
+settle H5 --- the same closing-horizon reconstruction over 20--30 cards, roughly 50 heavy
+favorites --- pins the mean closing gap to within about half a cent and is underway; the
+repository's \texttt{field} module ingests each new card as CSV rows and regenerates this
+analysis.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.95\textwidth]{field_gaps.png}
   \caption{Pilot field check: each point is one fight's favorite; the vertical position is the
   Kalshi ask minus the \devig{} multi-book consensus, with the cost model's scenario rows as
-  dashed references. Large markers are consensus favorites of $-300$ or shorter --- the subset
-  the walk-forward strategy trades.}
+  dashed references. Circles are live midweek snapshots; squares are reconstructed closing
+  quotes (last pre-fight hourly candle vs.\ the books' closing range). Large markers are
+  consensus favorites of $-300$ or shorter --- the subset the walk-forward strategy trades.}
   \label{fig:field}
 \end{figure}
 
@@ -545,7 +569,7 @@ were interpreted. The audit covered five classes of error.
 \emph{Reproducibility.} The entire pipeline --- data filters, tests, tables, figures --- runs
 from one command with fixed random seeds, and every number in this paper regenerates
 bit-identically from the frozen dataset snapshot (one library-version caveat for the
-gradient-boosting row is noted in the Reproducibility statement). The repository ships 32 unit
+gradient-boosting row is noted in the Reproducibility statement). The repository ships 33 unit
 tests covering the statistical machinery.
 
 \emph{Statistical dependence.} The two sides of a fight are mirror images. Every regression
@@ -580,9 +604,12 @@ source; intraday movement, best-price line shopping across books, and bet limits
 data. Second, the exchange analysis of Section~\ref{sec:fees} is counterfactual for the
 historical sample: Kalshi listed no UFC markets before 2025, so the scenario rows cannot be
 tested against realized 2010--2026 exchange quotes. The field data of Section~\ref{sec:field}
-begin to discipline the price assumption going forward, but two mid-week cards are a pilot ---
-exchange depth at 80-cent-plus prices, position limits, and maker fill rates all remain
-unmeasured, and the maker row in particular is an upper bound that ignores adverse selection.
+begin to discipline the price assumption --- including at the closing horizon, where the
+reconstructed quotes sit within a cent of the consensus --- but four cards split across two
+horizons are a pilot, the midweek-to-close compression is a contrast between different cards
+rather than a within-card price path, and exchange depth at 80-cent-plus prices, position limits,
+and maker fill rates all remain unmeasured; the maker row in particular is an upper bound that
+ignores adverse selection.
 Third, although the walk-forward protocol guards against rule snooping, the broader research
 design (studying favorites because the FLB literature predicts favorites) is itself informed by
 prior evidence; the protection is the out-of-sample era, not ignorance of the hypothesis. Fourth,
@@ -611,20 +638,23 @@ statistically ($+1.9\%$, $p = 0.11$), because the book's margin consumes most of
 Kalshi's fee at heavy-favorite prices is roughly a third of that margin at the sample's mean
 price, and settlement is free; under the standard assumption that exchange mids track the \devig{} book consensus, the
 same bets return $+4.5\%$ per bet ($p < 0.001$) net of fees, surviving a realistic spread. What
-the fee schedule cannot guarantee is the price. The first direct observations --- two pilot cards
-of live quotes --- find heavy-favorite asks about two cents above the \devig{} consensus:
-spreads are tight and the vig is gone, but exchange participants appear to correct part of the
-favorite underpricing, leaving a taker in the thin $+2\%$-per-bet regime rather than the
-decisive one. The binding constraints on exploiting a seventy-year-old anomaly in a modern
-market are price formation and depth, not explicit transaction costs. Completing the quote
-collection at closing horizons --- and, if the gap holds, testing maker execution with its fill
-risk --- converts H5 from scenario analysis into measurement, and is the project's next step.
+the fee schedule cannot guarantee is the price. The first direct observations --- two live
+midweek cards and two cards of reconstructed closing quotes --- find that where exchange prices
+sit depends on the horizon: spreads are tight and the vig is gone throughout, but heavy-favorite
+asks that stand two cents above the \devig{} consensus midweek compress to within about one cent
+by fight time. Taken at face value, closing-time taker execution lands between the
+frictionless-mid and one-cent scenarios --- the regime where the historical edge survives fees
+--- though four pilot cards cannot yet bear the weight of that conclusion. The binding
+constraints on exploiting a seventy-year-old anomaly in a modern market are price formation and,
+above all, depth, not explicit transaction costs. Extending the closing-quote reconstruction
+across 20--30 cards --- and, if the gap stays small, testing maker execution with its fill risk
+--- converts H5 from scenario analysis into measurement, and is the project's next step.
 
 \section*{Reproducibility statement}
 
 All results derive from a pinned snapshot of the public Ultimate UFC Dataset (6{,}904 fights,
 2010-03-21 to 2026-03-28) and regenerate bit-identically via \texttt{python run\_analysis.py}
-(fixed seeds, $B = 4{,}000$ bootstrap resamples throughout; 32 passing unit tests via
+(fixed seeds, $B = 4{,}000$ bootstrap resamples throughout; 33 passing unit tests via
 \texttt{pytest}), with one caveat: the gradient-boosting benchmark row varies at the third
 decimal with the scikit-learn version, because the estimator's internals evolve across releases
 even at a fixed seed. Committed results were generated with numpy 2.5.3, pandas 3.0.5, scipy
